@@ -35,7 +35,7 @@
 #include <thread>
 
 /**
- * N-api tools namespace
+ * markusJx namespace
  */
 namespace markusjx {
     /**
@@ -45,17 +45,64 @@ namespace markusjx {
     public:
 #if !(defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__))
 
-        explicit exception(const char *msg) : std::exception(), msg(msg) {}
+        /**
+         * A generic exception
+         *
+         * @param msg the error message
+         */
+        explicit exception(const char *msg) : std::exception(), msg(msg), type("exception") {}
 
+        /**
+         * Get the error message
+         *
+         * @return the error message
+         */
         [[nodiscard]] const char *what() const noexcept override {
             return msg;
         }
 
+    protected:
+        /**
+         * Some exception
+         *
+         * @param msg the error message
+         * @param type the exception type
+         */
+        exception(const char *msg, const char *type) : std::exception(), msg(msg), type(type) {}
+
     private:
         const char *msg;
 #else
-        using std::exception::exception;
+
+        /**
+         * A generic exception
+         *
+         * @param msg the error message
+         */
+        explicit exception(const char *msg) : std::exception(msg), type("exception") {}
+
+    protected:
+        /**
+         * Some exception
+         *
+         * @param msg the error message
+         * @param type the exception type
+         */
+        exception(const char *msg, const char *type) : std::exception(msg), type(type) {}
+
 #endif
+    public:
+        /**
+         * Get the exception type
+         *
+         * @return the exception type
+         */
+        [[nodiscard]] const char *getType() const noexcept {
+            return type;
+        }
+
+    private:
+        const char *type;
     };
 
     /**
@@ -64,14 +111,37 @@ namespace markusjx {
     class argumentMismatchException : public exception {
     public:
         /**
-         * The same as std::exception, just repackaged and sold for a higher price
+         * A argumentMismatchException
+         *
+         * @param msg the error message
          */
-        using exception::exception;
+        argumentMismatchException(const char *msg) : exception(msg, "argumentMismatchException") {}
     };
 
-    class conversionException: public exception {
+    /**
+     * An exception thrown if arguments cannot be converted
+     */
+    class conversionException : public exception {
     public:
-        using exception::exception;
+        /**
+         * A conversionException
+         *
+         * @param msg the error message
+         */
+        conversionException(const char *msg) : exception(msg, "conversionException") {}
+    };
+
+    /**
+     * An exception thrown when a index is out of bounds
+     */
+    class indexOutOfBoundsException : public exception {
+    public:
+        /**
+         * A indexOutOfBoundsException
+         *
+         * @param msg the error message
+         */
+        indexOutOfBoundsException(const char *msg) : exception(msg, "indexOutOfBoundsException") {}
     };
 
     /**
@@ -344,11 +414,7 @@ namespace markusjx {
 
         class object;
 
-#ifdef NAPI_VERSION
-
         class function;
-
-#endif //NAPI_VERSION
     }
 
     inline raw::js_object *getObjectFromExisting(const raw::js_object *current);
@@ -393,6 +459,16 @@ namespace markusjx {
          */
         template<class U>
         inline js_object_ptr(U obj);
+
+        /**
+         * Create a function
+         *
+         * @tparam R the return type of the function
+         * @tparam Args the function argument types
+         * @param func the function
+         */
+        template<class R, class...Args>
+        inline js_object_ptr(const std::function<R(Args...)> &func);
 
 #ifdef NAPI_VERSION
 
@@ -555,6 +631,27 @@ namespace markusjx {
         inline js_object_ptr<T> &operator=(bool value);
 
         /**
+         * Operator= for functions
+         *
+         * @tparam R the function return type
+         * @tparam Args the function argument types
+         * @param func the function
+         * @return this
+         */
+        template<class R, class...Args>
+        inline js_object_ptr<T> &operator=(const std::function<R(Args...)> &func);
+
+        /**
+         * Operator() for calling functions
+         *
+         * @tparam Args the argument types
+         * @param args the arguments
+         * @return the result of the function call
+         */
+        template<class...Args>
+        inline js_object_ptr<raw::js_object> operator()(Args...args);
+
+        /**
          * Convert this to a string and append values. Only available if T = raw::js_object or
          * if T = raw::string. If T = raw::js_object this will be converted to a string and the values will be
          * appended. If its type is already string, the values will just be appended
@@ -595,7 +692,7 @@ namespace markusjx {
          * @return the result of the operation
          */
         template<class U>
-        inline js_object_ptr<T> operator+(const js_object_ptr<U> &other);
+        [[nodiscard]] inline js_object_ptr<T> operator+(const js_object_ptr<U> &other) const;
 
         /**
          * operator +
@@ -605,7 +702,7 @@ namespace markusjx {
          * @return the result of the operation
          */
         template<class U>
-        inline js_object_ptr<T> operator+(U val);
+        [[nodiscard]] inline js_object_ptr<T> operator+(U val) const;
 
         /**
          * operator +
@@ -706,14 +803,14 @@ namespace markusjx {
          *
          * @return this
          */
-        inline const js_object_ptr<T> &operator++(int n);
+        inline const js_object_ptr<T> operator++(int n);
 
         /**
          * Operator --
          *
          * @return this
          */
-        inline const js_object_ptr<T> &operator--(int n);
+        inline const js_object_ptr<T> operator--(int n);
 
         /**
          * Operator <
@@ -857,14 +954,12 @@ namespace markusjx {
          */
         [[nodiscard]] inline js_object_ptr<raw::object> asObject() const;
 
-#ifdef NAPI_VERSION
         /**
          * Convert this to js_object_ptr<raw::function>
          *
          * @return the resulting pointer
          */
         [[nodiscard]] inline js_object_ptr<raw::function> asFunction() const;
-#endif //NAPI_VERSION
 
         // Overloaded operators for std::string, bool and double
         // Only available for the specific classes storing these
@@ -930,6 +1025,13 @@ namespace markusjx {
         }
 
         /**
+         * Convert this to a string
+         *
+         * @return this as a string
+         */
+        [[nodiscard]] inline std::string toString() const;
+
+        /**
          * Get the underlying pointer
          *
          * @return the underlying pointer
@@ -968,8 +1070,8 @@ namespace markusjx {
     using boolean = js_object_ptr<raw::boolean>;
     using object = js_object_ptr<raw::object>;
     using array = js_object_ptr<raw::array>;
-    using null = js_object_ptr<raw::null>;
-    using undefined = js_object_ptr<raw::undefined>;
+    using null_ptr = js_object_ptr<raw::null>;
+    using undefined_ptr = js_object_ptr<raw::undefined>;
 
     /**
      * A variable data type
@@ -1725,9 +1827,13 @@ namespace markusjx {
              * @return the char as a string
              */
             [[nodiscard]] inline objLValue operator[](int pos) const {
+                if (pos >= this->size()) {
+                    throw indexOutOfBoundsException("The requested index is out of bounds");
+                }
+
                 std::string str;
                 str += this->at(pos);
-                return objLValue([] (::markusjx::js_object) {}, str);
+                return objLValue([](::markusjx::js_object) {}, str);
             }
 
             /**
@@ -1801,6 +1907,7 @@ namespace markusjx {
              * @return this value as a string
              */
             [[nodiscard]] inline std::string toString() const override {
+                auto val = std::string(this->begin(), this->end());
                 return std::string(this->begin(), this->end());
             }
 
@@ -1867,6 +1974,10 @@ namespace markusjx {
              * @return the obj l-value
              */
             inline objLValue operator[](int index) {
+                if (index >= values.size()) {
+                    throw indexOutOfBoundsException("The requested index is out of bounds");
+                }
+
                 return objLValue([this, index](const ::markusjx::js_object &newPtr) {
                     values.insert(values.begin() + index, newPtr);
                 }, values.at(index));
@@ -2063,6 +2174,10 @@ namespace markusjx {
              * @return the object l-value
              */
             inline objLValue operator[](const std::string &key) {
+                if (!contents.contains(key)) {
+                    throw indexOutOfBoundsException("The requested key does not exist");
+                }
+
                 ::markusjx::js_object obj = contents.at(key);
                 auto iter = std::find(values.begin(), values.end(), obj);
 
@@ -2079,6 +2194,10 @@ namespace markusjx {
              * @return the object l-value
              */
             inline objLValue operator[](int index) {
+                if (index >= values.size()) {
+                    throw indexOutOfBoundsException("The requested index is out of bounds");
+                }
+
                 ::markusjx::js_object obj = values.at(index);
                 std::string key;
                 for (const auto &p : contents) {
@@ -2160,13 +2279,140 @@ namespace markusjx {
             std::vector<::markusjx::js_object> values;
         };
 
-#ifdef NAPI_VERSION // Disable function if n-api is not used
+        /**
+         * namespace for type conversions
+         */
+        namespace conversion {
+            /**
+             * A struct for converting a var to some values
+             */
+            template<class>
+            struct converter;
+
+            /**
+             * A struct for converting a var to a string
+             */
+            template<>
+            struct converter<std::string> {
+                static std::string convert(const ::markusjx::var &val) {
+                    return val.toString();
+                }
+            };
+
+            /**
+             * A struct for converting a var to a double
+             */
+            template<>
+            struct converter<double> {
+                static double convert(const ::markusjx::var &val) {
+                    return val.operator double();
+                }
+            };
+
+            /**
+             * A struct for converting a var to a int
+             */
+            template<>
+            struct converter<int> {
+                static int convert(const ::markusjx::var &val) {
+                    return (int) val.operator double();
+                }
+            };
+
+            /**
+             * A struct for converting a var to a bool
+             */
+            template<>
+            struct converter<bool> {
+                static double convert(const ::markusjx::var &val) {
+                    return val.operator bool();
+                }
+            };
+
+            /**
+             * A struct for converting a var to a var
+             */
+            template<>
+            struct converter<::markusjx::var> {
+                static ::markusjx::var convert(const ::markusjx::var &val) {
+                    return val;
+                }
+            };
+
+            /**
+             * convert a var to (almost) any value
+             *
+             * @tparam T the type to convert to
+             * @param val the value to convert
+             * @return the resulting value
+             */
+            template<class T>
+            T convertVar(const ::markusjx::var &val) {
+                return converter<T>::convert(val);
+            }
+        }
 
         /**
          * function type
          */
         class function : public js_object {
+        private:
+            template<std::size_t... S, class R, class...Args>
+            inline static R handleImpl(std::index_sequence<S...>, const std::vector<::markusjx::var> &values,
+                                       const std::function<R(Args...)> &fn) {
+                return fn(conversion::convertVar<typename std::decay_t<Args>>(values[S])...);
+            }
+
+            template<std::size_t... S, class...Args>
+            inline static void handleVoidImpl(std::index_sequence<S...>, const std::vector<::markusjx::var> &values,
+                                              const std::function<void(Args...)> &fn) {
+                fn(conversion::convertVar<typename std::decay_t<Args>>(values[S])...);
+            }
+
         public:
+            /**
+             * Create a function
+             *
+             * @tparam T the return type of the function
+             * @tparam Args the function argument types
+             * @param fn the function
+             */
+            template<class T, class...Args>
+            inline function(const std::function<T(Args...)> &fn) {
+                func = [fn](const std::vector<::markusjx::var> &values) {
+                    if (values.size() != sizeof...(Args)) {
+                        throw argumentMismatchException("argument count does not match");
+                    }
+
+                    auto sequence = std::index_sequence_for<Args...>{};
+
+                    if constexpr (std::is_same_v<T, void>) {
+                        handleVoidImpl(sequence, values, fn);
+                        return ::markusjx::undefined_ptr();
+                    } else {
+                        return ::markusjx::var(handleImpl(sequence, values, fn));
+                    }
+                };
+            }
+
+            /**
+             * operator() to call this
+             *
+             * @tparam Args the argument types
+             * @param args the arguments
+             * @return the return value
+             */
+            template<class...Args>
+            inline ::markusjx::var operator()(Args...args) {
+                std::vector<var> values;
+                if constexpr (sizeof...(Args) > 0) {
+                    values = convertArgsToVector<var>(args...);
+                }
+
+                return func(values);
+            }
+
+#ifdef NAPI_VERSION
             /**
              * Get a function from an n-api object
              *
@@ -2227,7 +2473,7 @@ namespace markusjx {
              * @return the result of the function call
              */
             template<class...Args>
-            inline ::var_type::js_object operator()(const Napi::Env &env, const napi_value &val, Args...args) {
+            inline ::markusjx::js_object operator()(const Napi::Env &env, const napi_value &val, Args...args) {
                 return this->operator()(env, val, convertArgsToVector<::js_object>(args...));
             }
 
@@ -2246,9 +2492,10 @@ namespace markusjx {
              * @param obj the object to compare with
              * @return true if the two objects are equal
              */
-            [[nodiscard]] inline bool operator==(const ::var_type::js_object &obj) const override {
+            [[nodiscard]] inline bool operator==(const ::markusjx::js_object &obj) const override {
                 return this->getType() == obj->getType() && this->fn == obj.as<function>()->fn;
             }
+#endif //NAPI_VERSION
 
             /**
              * Get the type of the object
@@ -2268,6 +2515,7 @@ namespace markusjx {
                 return "function";
             }
 
+#ifdef NAPI_VERSION
             /**
              * Get the n-api function of this class
              *
@@ -2276,6 +2524,7 @@ namespace markusjx {
             [[nodiscard]] inline operator Napi::Function() const {
                 return fn;
             }
+#endif //NAPI_VERSION
 
             /**
              * The destructor
@@ -2283,10 +2532,12 @@ namespace markusjx {
             inline ~function() = default;
 
         private:
+#ifdef NAPI_VERSION
             const Napi::Function fn;
-        };
-
+#else
+            std::function<::markusjx::var(const std::vector<::markusjx::var> &)> func;
 #endif //NAPI_VERSION
+        };
     }
 
     // js_object_ptr function definitions =====================================================================
@@ -2347,9 +2598,22 @@ namespace markusjx {
     template<class T>
     template<class U>
     inline js_object_ptr<T>::js_object_ptr(U obj) {
-        static_assert(!std::is_same_v<raw::js_object, T>,
-                      "raw::js_object cannot be constructed using given type U.");
-        ptr = new T(obj);
+        static_assert(
+                !std::is_same_v<raw::js_object, T> || (std::is_same_v<raw::js_object, T> && std::is_invocable_v<U>),
+                "raw::js_object cannot be constructed using given type U.");
+        if constexpr (std::is_same_v<raw::js_object, T>) {
+            ptr = new raw::function(std::function(obj));
+        } else {
+            ptr = new T(obj);
+        }
+    }
+
+    template<class T>
+    template<class R, class...Args>
+    inline js_object_ptr<T>::js_object_ptr(const std::function<R(Args...)> &func) {
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>,
+                      "Specialized constructors are not allowed when the type is not raw::js_object");
+        ptr = new raw::function(func);
     }
 
 #ifdef NAPI_VERSION
@@ -2461,7 +2725,12 @@ namespace markusjx {
     template<class T>
     template<class U>
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(U value) {
-        ptr->operator=(value);
+        if constexpr (std::is_invocable_v<U>) {
+            delete ptr;
+            ptr = new raw::function(std::function(value));
+        } else {
+            ptr->operator=(value);
+        }
 
         return *this;
     }
@@ -2517,6 +2786,32 @@ namespace markusjx {
         ptr->operator=(value);
 
         return *this;
+    }
+
+    template<class T>
+    template<class R, class...Args>
+    inline js_object_ptr<T> &js_object_ptr<T>::operator=(const std::function<R(Args...)> &func) {
+        delete ptr;
+        ptr = new raw::function(func);
+
+        return *this;
+    }
+
+    template<class T>
+    template<class...Args>
+    inline js_object_ptr<raw::js_object> js_object_ptr<T>::operator()(Args...args) {
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>,
+                      "operator() is only available when T = raw::js_object and its type is function or T = raw::function");
+        if constexpr (std::is_same_v<raw::function, T>) {
+            return ptr->operator()(args...);
+        } else {
+            if (get()->getType() == raw::js_type::function) {
+                return ((raw::function *) ptr)->operator()(args...);
+            } else {
+                throw argumentMismatchException(
+                        "operator() is only available when T = raw::js_object and its type is function or T = raw::function");
+            }
+        }
     }
 
     template<class T>
@@ -2711,7 +3006,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    inline js_object_ptr<T> js_object_ptr<T>::operator+(const js_object_ptr<U> &other) {
+    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator+(const js_object_ptr<U> &other) const {
         if constexpr (std::is_same_v<raw::string, U> || std::is_same_v<raw::string, T>) {
             std::string s(ptr->toString());
             s.append(other->toString());
@@ -2728,7 +3023,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    inline js_object_ptr<T> js_object_ptr<T>::operator+(U val) {
+    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator+(U val) const {
         if (ptr->getType() == raw::js_type::number) {
             // If U = std::string or U = const char *, create a string
             if constexpr (std::is_same_v<std::string, U> || std::is_same_v<const char *, U>) {
@@ -2791,7 +3086,8 @@ namespace markusjx {
                 return this->as<raw::number>()->operator-(val);
             } else if (ptr->isString()) {
                 char *p;
-                double d = std::strtod(this->operator std::string().c_str(), &p);
+                std::string data = this->toString();
+                double d = std::strtod(data.c_str(), &p);
                 if (*p) {
                     throw conversionException("Unable to convert string to double");
                 } else {
@@ -2822,7 +3118,8 @@ namespace markusjx {
                 return this->as<raw::number>()->operator*(val);
             } else if (ptr->isString()) {
                 char *p;
-                double d = std::strtod(this->operator std::string().c_str(), &p);
+                std::string data = this->toString();
+                double d = std::strtod(data.c_str(), &p);
                 if (*p) {
                     throw conversionException("Unable to convert string to double");
                 } else {
@@ -2852,7 +3149,8 @@ namespace markusjx {
                 return this->as<raw::number>()->operator/(val);
             } else if (ptr->isString()) {
                 char *p;
-                double d = std::strtod(this->operator std::string().c_str(), &p);
+                std::string data = this->toString();
+                double d = std::strtod(data.c_str(), &p);
                 if (*p) {
                     throw conversionException("Unable to convert string to double");
                 } else {
@@ -2890,7 +3188,7 @@ namespace markusjx {
     }
 
     template<class T>
-    inline const js_object_ptr<T> &js_object_ptr<T>::operator++(int n) {
+    inline const js_object_ptr<T> js_object_ptr<T>::operator++(int n) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator++ is only available when T = number or T = js_object and its type is number");
         if constexpr (std::is_same_v<raw::number, T>) {
@@ -2916,7 +3214,7 @@ namespace markusjx {
     }
 
     template<class T>
-    inline const js_object_ptr<T> &js_object_ptr<T>::operator--(int n) {
+    inline const js_object_ptr<T> js_object_ptr<T>::operator--(int n) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator-- is only available when T = number or T = js_object and its type is number");
         if constexpr (std::is_same_v<raw::number, T>) {
@@ -3136,7 +3434,6 @@ namespace markusjx {
         return to<raw::object>();
     }
 
-#ifdef NAPI_VERSION
     template<class T>
     [[nodiscard]] inline js_object_ptr<raw::function> js_object_ptr<T>::asFunction() const {
         static_assert(std::is_same_v<raw::js_object, T>, "asFunction can only be called on a raw object");
@@ -3144,7 +3441,6 @@ namespace markusjx {
             throw argumentMismatchException("asFunction can only be called on a raw object of type function");
         return to<raw::function>();
     }
-#endif //NAPI_VERSION
 
     // Overloaded operators for std::string, bool and double
     // Only available for the specific classes storing these
@@ -3190,7 +3486,8 @@ namespace markusjx {
                 return ((raw::number *) ptr)->operator double();
             } else if (ptr->isString()) {
                 char *p;
-                double d = std::strtod(this->operator std::string().c_str(), &p);
+                std::string data = this->toString();
+                double d = std::strtod(data.c_str(), &p);
                 if (*p) {
                     throw conversionException("Unable to convert string to double");
                 } else {
@@ -3217,6 +3514,15 @@ namespace markusjx {
     template<class U>
     [[nodiscard]] inline bool js_object_ptr<T>::operator!=(const js_object_ptr<U> &other) const {
         return !this->operator==(other);
+    }
+
+    template<class T>
+    [[nodiscard]] inline std::string js_object_ptr<T>::toString() const {
+        if (ptr) {
+            return ptr->toString();
+        } else {
+            return "";
+        }
     }
 
     template<class T>
@@ -3260,6 +3566,18 @@ namespace markusjx {
             return new raw::undefined();
         }
     }
+
+    // Null and undefined types ======================
+
+    /**
+     * Null type
+     */
+    const null_ptr null;
+
+    /**
+     * Undefined type
+     */
+    const undefined_ptr undefined;
 }
 
 #endif //MARKUSJX_VAR_HPP

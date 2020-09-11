@@ -3,15 +3,20 @@
 #include "var.hpp"
 
 int main() {
-    markusjx::var v = "abc";
+    using namespace markusjx;
+    var v = undefined;
     try {
         std::cout << v << std::endl;
-        v = "5";
-        v = v / 2;
-        std::cout << v << ", " << v->getTypeAsString() << std::endl;
-        std::cout << v + true << std::endl;
-    } catch (std::exception &e) {
-        std::cerr << "Exception thrown: " << e.what() << std::endl;
+
+        var fn = []() {
+            std::cout << "abc: " << 5 << std::endl;
+        };
+
+        fn();
+
+        std::cout << v << std::endl;
+    } catch (markusjx::exception &e) {
+        std::cerr << "Exception thrown: " << e.getType() << ": " << e.what() << std::endl;
     }
 }
 
