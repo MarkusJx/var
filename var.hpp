@@ -32,7 +32,6 @@
 #include <map>
 #include <type_traits>
 #include <functional>
-#include <thread>
 
 /**
  * markusJx namespace
@@ -398,8 +397,6 @@ namespace markusjx {
             return val;
         }
 
-        class objLValue;
-
         class undefined;
 
         class null;
@@ -437,11 +434,9 @@ namespace markusjx {
         inline js_object_ptr();
 
         /**
-         * Construct a js_object_ptr from a raw::objLValue
-         *
-         * @param val the value to construct this from
+         * Construct null. Only available when T = raw::js_object or raw::null
          */
-        inline js_object_ptr(const raw::objLValue &val);
+        inline js_object_ptr(nullptr_t);
 
         /**
          * Create a js_object_ptr from an existing poitner
@@ -532,6 +527,23 @@ namespace markusjx {
         inline js_object_ptr(const std::vector<js_object_ptr<raw::js_object>> &data);
 
         /**
+         * Create a js_object_ptr from a initializer list. Will create a raw::array. If T = raw::js_object, the
+         * raw::array will be cast to a raw::js_object. Only available if T = raw::js_object or raw::array
+         *
+         * @param list
+         */
+        inline js_object_ptr(const std::initializer_list<js_object_ptr<raw::js_object>> &list);
+
+        /**
+         * Create a js_object_ptr from a map. Will create a raw::object. If T = raw::js_object, the raw::object will be
+         * cast to a raw::js_object. Only available if T = raw::js_object or raw::object
+         *
+         * @param data the data map
+         */
+        inline js_object_ptr(
+                const std::initializer_list<std::pair<const js_object_ptr<raw::js_object>, js_object_ptr<raw::js_object>>> &data);
+
+        /**
          * Copy constructor
          *
          * @tparam U the object type to copy from
@@ -576,19 +588,18 @@ namespace markusjx {
          * Set a value. If T = raw::js_object or raw::function a function will be assumed for U
          *
          * @tparam U the type of the value
-         * @param value the function
+         * @param value the value of function to set
          * @return this
          */
         template<class U>
         inline js_object_ptr<T> &operator=(U value);
 
         /**
-         * Set a value with a objLValue
+         * Set this to null. Only available when T = raw::js_object or raw::null
          *
-         * @param val the value to set
          * @return this
          */
-        inline js_object_ptr<T> &operator=(const raw::objLValue &val);
+        inline js_object_ptr<T> &operator=(nullptr_t);
 
         /**
          * Set a value. Only available when T = raw::js_object or T = raw::string
@@ -676,14 +687,13 @@ namespace markusjx {
 #endif //NAPI_VERSION
 
         /**
-         * operator []
+         * operator [] for objects. Only available when this->getType() = object. Will create a new pair if the key
+         * does not exist
          *
-         * @tparam U the type of the search value
-         * @param searchValue the search value
-         * @return the result of the operation
+         * @param searchValue the value to search for
+         * @return a reference to the object
          */
-        template<class U>
-        inline auto operator[](const U &searchValue);
+        inline js_object_ptr<raw::js_object> &operator[](const js_object_ptr<raw::js_object> &searchValue);
 
         /**
          * operator +
@@ -1631,66 +1641,6 @@ namespace markusjx {
         };
 
         /**
-         * object l-value
-         */
-        class objLValue {
-        public:
-            /**
-             * The constructor
-             *
-             * @param setter the setter function
-             * @param ptr the pointer
-             */
-            explicit inline objLValue(std::function<void(::markusjx::js_object)> setter,
-                                      const ::markusjx::js_object &ptr)
-                    : setter(std::move(setter)), ptr(ptr) {}
-
-            /**
-             * The object setter
-             *
-             * @param val the value
-             * @return this
-             */
-            inline objLValue &operator=(const ::markusjx::js_object &val) {
-                setter(val);
-                ptr = val;
-
-                return *this;
-            }
-
-            /**
-             * operator ->
-             *
-             * @return the object
-             */
-            [[nodiscard]] inline ::markusjx::js_object operator->() const {
-                return ptr;
-            }
-
-            /**
-             * Get the pointer
-             *
-             * @return the pointer
-             */
-            [[nodiscard]] inline ::markusjx::js_object getValue() const {
-                return ptr;
-            }
-
-            /**
-             * Get the pointer
-             *
-             * @return the pointer
-             */
-            [[nodiscard]] inline operator ::markusjx::js_object() const {
-                return ptr;
-            }
-
-        private:
-            std::function<void(::markusjx::js_object)> setter;
-            ::markusjx::js_object ptr;
-        };
-
-        /**
          * string type
          */
         class string : public std::string, public js_object {
@@ -1826,14 +1776,14 @@ namespace markusjx {
              * @param pos the position of the char to get
              * @return the char as a string
              */
-            [[nodiscard]] inline objLValue operator[](int pos) const {
+            [[nodiscard]] inline markusjx::var operator[](int pos) const {
                 if (pos >= this->size()) {
                     throw indexOutOfBoundsException("The requested index is out of bounds");
                 }
 
                 std::string str;
                 str += this->at(pos);
-                return objLValue([](::markusjx::js_object) {}, str);
+                return str;
             }
 
             /**
@@ -1968,19 +1918,23 @@ namespace markusjx {
             inline array(std::vector<::markusjx::js_object> val) : values(std::move(val)) {}
 
             /**
-             * Get the value at an index
+             * Create an array from a initializer_list
+             *
+             * @param list the list
+             */
+            inline array(const std::initializer_list<::markusjx::var> &list) : values(list) {}
+
+            /**
+             * Get a value by an index
              *
              * @param index the index
-             * @return the obj l-value
+             * @return the value at this index
              */
-            inline objLValue operator[](int index) {
+            inline ::markusjx::var &operator[](int index) {
                 if (index >= values.size()) {
-                    throw indexOutOfBoundsException("The requested index is out of bounds");
+                    values.resize(index + 1, ::markusjx::undefined_ptr());
                 }
-
-                return objLValue([this, index](const ::markusjx::js_object &newPtr) {
-                    values.insert(values.begin() + index, newPtr);
-                }, values.at(index));
+                return values[index];
             }
 
             /**
@@ -2079,7 +2033,7 @@ namespace markusjx {
             [[nodiscard]] inline bool operator==(const ::markusjx::js_object &obj) const override {
                 if (obj->getType() == this->getType() && this->length() == obj.as<array>()->length()) {
                     for (int i = 0; i < this->length(); ++i) {
-                        if (this->getValues()[i] != obj.as<array>()->operator[](i).getValue()) {
+                        if (this->getValues()[i] != obj.as<array>()->operator[](i)) {
                             return false;
                         }
                     }
@@ -2115,6 +2069,12 @@ namespace markusjx {
 
         private:
             std::vector<::markusjx::js_object> values;
+        };
+
+        struct cmpVarByPtr {
+            bool operator()(const ::markusjx::var &lv, const ::markusjx::var &rv) const {
+                return lv.get() < rv.get();
+            }
         };
 
         /**
@@ -2159,58 +2119,34 @@ namespace markusjx {
 #endif //NAPI_VERSION
 
             /**
+             * Construct an object from a map
+             *
+             * @param m the map to construct from
+             */
+            object(const std::initializer_list<std::pair<const ::markusjx::var, ::markusjx::var>> &list) : contents(
+                    list) {}
+
+            /**
              * Get the length of the object
              *
              * @return the length
              */
             [[nodiscard]] inline size_t length() const {
-                return values.size();
+                return contents.size();
             }
 
             /**
-             * Get a value by a key
+             * Get a value by a key. Creates it when the key does not exist
              *
              * @param key the key
              * @return the object l-value
              */
-            inline objLValue operator[](const std::string &key) {
-                if (!contents.contains(key)) {
-                    throw indexOutOfBoundsException("The requested key does not exist");
+            inline ::markusjx::var &operator[](const ::markusjx::var &key) {
+                if (contents.contains(key)) {
+                    return contents.at(key);
+                } else {
+                    return contents.insert_or_assign(key, ::markusjx::undefined_ptr()).first->second;
                 }
-
-                ::markusjx::js_object obj = contents.at(key);
-                auto iter = std::find(values.begin(), values.end(), obj);
-
-                return objLValue([this, key, iter](::markusjx::js_object newPtr) {
-                    contents.insert_or_assign(key, newPtr);
-                    values.insert(iter, newPtr);
-                }, obj);
-            }
-
-            /**
-             * Get a value by an index
-             *
-             * @param index the index of the value
-             * @return the object l-value
-             */
-            inline objLValue operator[](int index) {
-                if (index >= values.size()) {
-                    throw indexOutOfBoundsException("The requested index is out of bounds");
-                }
-
-                ::markusjx::js_object obj = values.at(index);
-                std::string key;
-                for (const auto &p : contents) {
-                    if (p.second == obj) {
-                        key = p.first;
-                        break;
-                    }
-                }
-
-                return objLValue([this, key, index](::markusjx::js_object newPtr) {
-                    contents.insert_or_assign(key, newPtr);
-                    values.insert(values.begin() + index, newPtr);
-                }, obj);
             }
 
 #ifdef NAPI_VERSION
@@ -2239,13 +2175,7 @@ namespace markusjx {
              */
             [[nodiscard]] inline bool operator==(const ::markusjx::js_object &obj) const override {
                 if (obj->getType() == this->getType() && this->length() == obj.as<object>()->length()) {
-                    for (int i = 0; i < this->length(); ++i) {
-                        if (this->values[i] != obj.as<object>()->operator[](i).getValue()) {
-                            return false;
-                        }
-                    }
-
-                    return true;
+                    return std::equal(this->contents.begin(), this->contents.end(), obj.asObject()->contents.begin());
                 } else {
                     return false;
                 }
@@ -2275,8 +2205,7 @@ namespace markusjx {
             inline ~object() override = default;
 
         private:
-            std::map<std::string, ::markusjx::js_object> contents;
-            std::vector<::markusjx::js_object> values;
+            std::map<::markusjx::var, ::markusjx::var, cmpVarByPtr> contents;
         };
 
         /**
@@ -2411,6 +2340,7 @@ namespace markusjx {
 
                 return func(values);
             }
+
 
 #ifdef NAPI_VERSION
             /**
@@ -2586,8 +2516,10 @@ namespace markusjx {
     }
 
     template<class T>
-    inline js_object_ptr<T>::js_object_ptr(const raw::objLValue &val) {
-        ptr = getObjectFromExisting(val.getValue().ptr);
+    inline js_object_ptr<T>::js_object_ptr(nullptr_t) {
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>,
+                      "Null can only be constructed when T = raw::js_object or raw::null");
+        ptr = new raw::null();
     }
 
     template<class T>
@@ -2666,6 +2598,21 @@ namespace markusjx {
     }
 
     template<class T>
+    inline js_object_ptr<T>::js_object_ptr(const std::initializer_list<js_object_ptr<raw::js_object>> &list) {
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::array, T>,
+                      "Specialized constructors are not allowed when the type is not raw::js_object");
+        ptr = (T *) new raw::array(list);
+    }
+
+    template<class T>
+    inline js_object_ptr<T>::js_object_ptr(
+            const std::initializer_list<std::pair<const ::markusjx::var, ::markusjx::var>> &data) {
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T>,
+                      "Specialized constructors are not allowed when the type is not raw::js_object");
+        ptr = (T *) new raw::object(data);
+    }
+
+    template<class T>
     template<class U>
     inline js_object_ptr<T>::js_object_ptr(const js_object_ptr<U> &obj) {
         if constexpr (std::is_same_v<raw::js_object, U>) {
@@ -2733,9 +2680,11 @@ namespace markusjx {
     }
 
     template<class T>
-    inline js_object_ptr<T> &js_object_ptr<T>::operator=(const raw::objLValue &val) {
+    inline js_object_ptr<T> &js_object_ptr<T>::operator=(nullptr_t) {
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>,
+                      "Object can only be set to null when T = raw::js_object or raw::null");
         delete ptr;
-        ptr = getObjectFromExisting(val.getValue().ptr);
+        ptr = new raw::null();
 
         return *this;
     }
@@ -2978,25 +2927,23 @@ namespace markusjx {
 #endif //NAPI_VERSION
 
     template<class T>
-    template<class U>
-    inline auto js_object_ptr<T>::operator[](const U &searchValue) {
+    inline js_object_ptr<raw::js_object> &
+    js_object_ptr<T>::operator[](const js_object_ptr<raw::js_object> &searchValue) {
         static_assert(
-                std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T> || std::is_same_v<raw::object, T> ||
-                std::is_same_v<raw::array, T>,
-                "operator[] is only available when T = raw::js_object and its type is string, object, array or T = raw::string, raw::object, raw::array");
-        if constexpr (std::is_same_v<raw::string, T> || std::is_same_v<raw::object, T> ||
-                      std::is_same_v<raw::array, T>) {
+                std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T> || std::is_same_v<raw::array, T>,
+                "operator[] is only available when T = raw::object, raw::array or raw::js_object and its type is object or array");
+        if constexpr (std::is_same_v<raw::object, T>) {
             return ptr->operator[](searchValue);
+        } else if constexpr (std::is_same_v<raw::array, T>) {
+            return ptr->operator[]((int) searchValue.operator double());
         } else {
-            if (ptr->isString()) {
-                return ((raw::string *) ptr)->operator[](searchValue);
-            } else if (ptr->isObject()) {
+            if (ptr->isObject()) {
                 return ((raw::object *) ptr)->operator[](searchValue);
             } else if (ptr->isArray()) {
-                return ((raw::array *) ptr)->operator[](searchValue);
+                return ((raw::array *) ptr)->operator[]((int) searchValue.operator double());
             } else {
                 throw argumentMismatchException(
-                        "operator[] is only available when T = raw::js_object and its type is string, object, array or T = raw::string, raw::object, raw::array");
+                        "operator[] is only available when T = raw::object, raw::array or raw::js_object and its type is object or array");
             }
         }
     }
@@ -3393,7 +3340,8 @@ namespace markusjx {
     template<class T>
     [[nodiscard]] inline js_object_ptr<raw::string> js_object_ptr<T>::asString() const {
         // Throw compile-time error if asString is not called on a raw::js_object
-        static_assert(std::is_same_v<raw::js_object, T>, "asString can only be called on a raw object");
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
+                      "asString can only be called on a raw object");
         if (ptr->getType() != raw::js_type::string)
             throw argumentMismatchException("asString can only be called on a raw object of type string");
         return to<raw::string>();
@@ -3401,7 +3349,8 @@ namespace markusjx {
 
     template<class T>
     [[nodiscard]] inline js_object_ptr<raw::number> js_object_ptr<T>::asNumber() const {
-        static_assert(std::is_same_v<raw::js_object, T>, "asNumber can only be called on a raw object");
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
+                      "asNumber can only be called on a raw object");
         if (ptr->getType() != raw::js_type::number)
             throw argumentMismatchException("asNumber can only be called on a raw object of type number");
         return to<raw::number>();
@@ -3409,7 +3358,8 @@ namespace markusjx {
 
     template<class T>
     [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::asBoolean() const {
-        static_assert(std::is_same_v<raw::js_object, T>, "asBoolean can only be called on a raw object");
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>,
+                      "asBoolean can only be called on a raw object");
         if (ptr->getType() != raw::js_type::boolean)
             throw argumentMismatchException("asBoolean can only be called on a raw object of type boolean");
         return to<raw::boolean>();
@@ -3417,7 +3367,8 @@ namespace markusjx {
 
     template<class T>
     [[nodiscard]] inline js_object_ptr<raw::array> js_object_ptr<T>::asArray() const {
-        static_assert(std::is_same_v<raw::js_object, T>, "asArray can only be called on a raw object");
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::array, T>,
+                      "asArray can only be called on a raw object");
         if (ptr->getType() != raw::js_type::string)
             throw argumentMismatchException("asArray can only be called on a raw object of type array");
         return to<raw::array>();
@@ -3425,7 +3376,8 @@ namespace markusjx {
 
     template<class T>
     [[nodiscard]] inline js_object_ptr<raw::object> js_object_ptr<T>::asObject() const {
-        static_assert(std::is_same_v<raw::js_object, T>, "asObject can only be called on a raw object");
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T>,
+                      "asObject can only be called on a raw object");
         if (ptr->getType() != raw::js_type::object)
             throw argumentMismatchException("asObject can only be called on a raw object of type object");
         return to<raw::object>();
@@ -3433,8 +3385,9 @@ namespace markusjx {
 
     template<class T>
     [[nodiscard]] inline js_object_ptr<raw::function> js_object_ptr<T>::asFunction() const {
-        static_assert(std::is_same_v<raw::js_object, T>, "asFunction can only be called on a raw object");
-        if (ptr->getType() != raw::js_type::string)
+        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>,
+                      "asFunction can only be called on a raw object");
+        if (ptr->getType() != raw::js_type::function)
             throw argumentMismatchException("asFunction can only be called on a raw object of type function");
         return to<raw::function>();
     }

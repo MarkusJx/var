@@ -4,15 +4,19 @@
 
 int main() {
     using namespace markusjx;
-    var v = undefined;
+    var v = nullptr;
     try {
+        v = nullptr;
         std::cout << v << std::endl;
 
-        var v1 = [] (int i) {
-            return i;
+        var fn = [](int i) {
+            std::cout << i << std::endl;
         };
 
-        std::cout << v1(1) << std::endl;
+        v = array({"a", "b"});
+
+        // TODO: Fix this search
+        std::cout << v[1] << std::endl;
     } catch (markusjx::exception &e) {
         std::cerr << "Exception thrown: " << e.getType() << ": " << e.what() << std::endl;
     }
