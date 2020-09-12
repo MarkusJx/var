@@ -8,13 +8,11 @@ int main() {
     try {
         std::cout << v << std::endl;
 
-        var fn = []() {
-            std::cout << "abc: " << 5 << std::endl;
+        var v1 = [] (int i) {
+            return i;
         };
 
-        fn();
-
-        std::cout << v << std::endl;
+        std::cout << v1(1) << std::endl;
     } catch (markusjx::exception &e) {
         std::cerr << "Exception thrown: " << e.getType() << ": " << e.what() << std::endl;
     }

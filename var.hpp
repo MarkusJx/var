@@ -452,7 +452,7 @@ namespace markusjx {
 
         /**
          * Create an object from a value.
-         * Will be disabled if T = raw::js_object. For this case, specialized constructors are available.
+         * If T = raw::js_object, it will be assumed that U is a function or lambda
          *
          * @tparam U the value type
          * @param obj the object
@@ -573,10 +573,10 @@ namespace markusjx {
         inline js_object_ptr<T> &operator=(const js_object_ptr<U> &other);
 
         /**
-         * Set a value
+         * Set a value. If T = raw::js_object or raw::function a function will be assumed for U
          *
          * @tparam U the type of the value
-         * @param value the value
+         * @param value the function
          * @return this
          */
         template<class U>
@@ -2598,10 +2598,7 @@ namespace markusjx {
     template<class T>
     template<class U>
     inline js_object_ptr<T>::js_object_ptr(U obj) {
-        static_assert(
-                !std::is_same_v<raw::js_object, T> || (std::is_same_v<raw::js_object, T> && std::is_invocable_v<U>),
-                "raw::js_object cannot be constructed using given type U.");
-        if constexpr (std::is_same_v<raw::js_object, T>) {
+        if constexpr (std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>) {
             ptr = new raw::function(std::function(obj));
         } else {
             ptr = new T(obj);
@@ -2612,7 +2609,7 @@ namespace markusjx {
     template<class R, class...Args>
     inline js_object_ptr<T>::js_object_ptr(const std::function<R(Args...)> &func) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>,
-                      "Specialized constructors are not allowed when the type is not raw::js_object");
+                      "Specialized constructors are not allowed when the type is raw::js_object");
         ptr = new raw::function(func);
     }
 
@@ -2725,7 +2722,7 @@ namespace markusjx {
     template<class T>
     template<class U>
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(U value) {
-        if constexpr (std::is_invocable_v<U>) {
+        if constexpr (std::is_same_v<raw::js_object, T>) {
             delete ptr;
             ptr = new raw::function(std::function(value));
         } else {
