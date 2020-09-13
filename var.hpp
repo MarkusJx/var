@@ -114,7 +114,7 @@ namespace markusjx {
          *
          * @param msg the error message
          */
-        argumentMismatchException(const char *msg) : exception(msg, "argumentMismatchException") {}
+        explicit argumentMismatchException(const char *msg) : exception(msg, "argumentMismatchException") {}
     };
 
     /**
@@ -127,7 +127,7 @@ namespace markusjx {
          *
          * @param msg the error message
          */
-        conversionException(const char *msg) : exception(msg, "conversionException") {}
+        explicit conversionException(const char *msg) : exception(msg, "conversionException") {}
     };
 
     /**
@@ -140,7 +140,7 @@ namespace markusjx {
          *
          * @param msg the error message
          */
-        indexOutOfBoundsException(const char *msg) : exception(msg, "indexOutOfBoundsException") {}
+        explicit indexOutOfBoundsException(const char *msg) : exception(msg, "indexOutOfBoundsException") {}
     };
 
     /**
@@ -1037,6 +1037,13 @@ namespace markusjx {
          * @return the double value
          */
         [[nodiscard]] inline operator double() const;
+
+        /**
+         * operator int
+         *
+         * @return the int value
+         */
+        [[nodiscard]] inline operator int() const;
 
         /**
          * Operator ->
@@ -2289,7 +2296,14 @@ namespace markusjx {
              * @param m the map to construct from
              */
             inline object(const std::initializer_list<std::pair<const ::markusjx::var, ::markusjx::var>> &list)
-                    : contents(list) {}
+                    : contents(list) {
+                // Check if type function is used as key. Throw an exception if so as this is not possible
+                for (const auto &p : contents) {
+                    if (p.first->isFunction()) {
+                        throw argumentMismatchException("Cannot use type function as key");
+                    }
+                }
+            }
 
             /**
              * Copy constructor
@@ -3670,6 +3684,11 @@ namespace markusjx {
                 throw argumentMismatchException("Can not use operator double on non-number type");
             }
         }
+    }
+
+    template<class T>
+    [[nodiscard]] inline js_object_ptr<T>::operator int() const {
+        return (int) this->operator double();
     }
 
     template<class T>

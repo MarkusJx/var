@@ -50,6 +50,9 @@ markusjx::var arr = markusjx::array({0, 1, "abc", false});
 **NOTE: Objects must be created with explicit ``markusjx::object(1)`` constructor.
 Objects can only accept arguments of types ``markusjx::var`` can accept.**
 
+Also not that functions cannot be used as keys in objects. If tried, an
+```markusjx::argumentMismatchException``` will be thrown.
+
 Create using ``std::initializer_list``:
 ```c++
 markusjx::var obj = markusjx::object({{0, "1"},
@@ -101,5 +104,28 @@ for (const auto& p : obj.asObject()) {
     // p is of type std::pair
     var key = v.first;
     var value = v.second;
+}
+```
+
+## Exceptions
+Various actions can cause exceptions to be thrown, e.g. when trying to get
+a double value from a string. All exceptions thrown are subclasses of
+``markusjx::exception``, so catching this seems to be a good idea.
+
+Example:
+```c++
+try {
+    var s = "abc";
+
+    // Will throw a conversionException as it tries to convert
+    // "abc" to a double value, which is not possible
+    int i = s;
+} catch (markusjx::exception &e) {
+    // The exception message can be read with e.what()
+    const char *what = e.what();
+
+    // The type of the exception can be read using e.getType()
+    // This will return the exception type, e.g. conversionException
+    const char *type = e.getType();
 }
 ```

@@ -11,6 +11,9 @@ int main() {
 
         v = "abc";
         std::cout << v << std::endl;
+        //v = 5;
+
+        int i = v;
 
         v = [](var i) {
             std::cout << i << std::endl;
