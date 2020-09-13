@@ -11,9 +11,10 @@ int main() {
 
         v = "abc";
         std::cout << v << std::endl;
-        //v = 5;
 
-        int i = v;
+        v = v + 5;
+
+        std::cout << v << std::endl;
 
         v = [](var i) {
             std::cout << i << std::endl;

@@ -78,12 +78,41 @@ Array values can be accessed by indices
 markusjx::var a_1 = arr[1];
 ```
 
+Array values can be set by indices. It is also possible to set a value for an index
+which is out of range. In this case, the underlying ``std::vector`` will be expanded
+to the requested index, all unset values will be set to ``markusjx::undefined`` and
+the value at the requested index will be set to the new value. If no value is set,
+the value at the requested index will remain ``markusjx::undefined``.
+```c++
+markusjx::var arr = markusjx::array({0, 1, 2, 3});
+
+arr[0] = "a"; // arr[0] is now "a"
+
+// Set arr[5] to "b", arr[4] will be undefined
+// the size of arr will be 6
+arr[5] = "b"; 
+```
+
+The same applies to objects:
+```c++
+markusjx::var obj = markusjx::object({{0, 1},
+                                      {1, 1},
+                                      {2, 3},
+                                      {3, 5}});
+
+obj[0] = "a"; // obj[0] is now "a"
+
+// expand obj and set value for new key "a"
+// to "b"
+obj["a"] = "b";
+```
+
 Object values can be accessed by their key values
 ```c++
 markusjx::var o_0 = o[0];
 
 // or
-markusjx::var o_a = a["a"];
+markusjx::var o_a = o["a"];
 ```
 
 It is also possible to iterate over arrays
@@ -102,8 +131,8 @@ This is also possible with objects
 // must call asObject() on a var type to iterate
 for (const auto& p : obj.asObject()) {
     // p is of type std::pair
-    var key = v.first;
-    var value = v.second;
+    markusjx::var key = v.first;
+    markusjx::var value = v.second;
 }
 ```
 

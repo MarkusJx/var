@@ -497,6 +497,8 @@ namespace markusjx {
          *
          * @param c the char array containing data
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
         inline js_object_ptr(const char *c);
 
         /**
@@ -515,6 +517,8 @@ namespace markusjx {
          *
          * @param b the bool value
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
         inline js_object_ptr(bool b);
 
         /**
@@ -523,6 +527,8 @@ namespace markusjx {
          *
          * @param i the integer value
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         inline js_object_ptr(int i);
 
         /**
@@ -531,6 +537,8 @@ namespace markusjx {
          *
          * @param d the double value
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         inline js_object_ptr(double d);
 
         /**
@@ -540,6 +548,7 @@ namespace markusjx {
          * @param obj the object to copy from
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T>
         inline js_object_ptr(const js_object_ptr<U> &obj);
 
         /**
@@ -572,6 +581,7 @@ namespace markusjx {
          * @return this
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T>
         inline js_object_ptr<T> &operator=(const js_object_ptr<U> &other);
 
         /**
@@ -719,7 +729,7 @@ namespace markusjx {
          * @return the result of the operation
          */
         template<class U>
-        [[nodiscard]] inline js_object_ptr<T> operator+(U val) const;
+        [[nodiscard]] inline js_object_ptr<T> operator+(const U &val) const;
 
         /**
          * operator +
@@ -737,6 +747,7 @@ namespace markusjx {
          * @return the result of the operation
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<T> operator-(const U &val) const;
 
         /**
@@ -755,6 +766,7 @@ namespace markusjx {
          * @return the result of the operation
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<T> operator*(const U &val) const;
 
         /**
@@ -773,6 +785,7 @@ namespace markusjx {
          * @return the result of the operation
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<T> operator/(const U &val) const;
 
         /**
@@ -783,7 +796,7 @@ namespace markusjx {
          * @return this
          */
         template<class U>
-        inline js_object_ptr<T> &operator+=(U val);
+        inline js_object_ptr<T> &operator+=(const U &val);
 
         /**
          * Operator -=
@@ -793,7 +806,7 @@ namespace markusjx {
          * @return this
          */
         template<class U>
-        inline js_object_ptr<T> &operator-=(U val);
+        inline js_object_ptr<T> &operator-=(const U &val);
 
         /**
          * Operator *=
@@ -813,13 +826,15 @@ namespace markusjx {
          * @return this
          */
         template<class U>
-        inline js_object_ptr<T> &operator/=(U val);
+        inline js_object_ptr<T> &operator/=(const U &val);
 
         /**
          * Operator ++
          *
          * @return this
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         inline const js_object_ptr<T> operator++(int n);
 
         /**
@@ -827,6 +842,8 @@ namespace markusjx {
          *
          * @return this
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         inline const js_object_ptr<T> operator--(int n);
 
         /**
@@ -837,6 +854,7 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<raw::boolean> operator<(const U &val) const;
 
         /**
@@ -847,6 +865,7 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<raw::boolean> operator>(const U &val) const;
 
         /**
@@ -857,6 +876,7 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<raw::boolean> operator<=(const U &val) const;
 
         /**
@@ -867,6 +887,7 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<raw::boolean> operator>=(const U &val) const;
 
         /**
@@ -877,6 +898,7 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<raw::boolean> operator<(const js_object_ptr<U> &val) const;
 
         /**
@@ -887,6 +909,7 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<raw::boolean> operator>(const js_object_ptr<U> &val) const;
 
         /**
@@ -897,6 +920,7 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<raw::boolean> operator<=(const js_object_ptr<U> &val) const;
 
         /**
@@ -907,6 +931,7 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<raw::boolean> operator>=(const js_object_ptr<U> &val) const;
 
         /**
@@ -977,6 +1002,8 @@ namespace markusjx {
          *
          * @return the resulting pointer
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
         [[nodiscard]] inline js_object_ptr<raw::string> asString() const;
 
         /**
@@ -984,6 +1011,8 @@ namespace markusjx {
          *
          * @return the resulting pointer
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         [[nodiscard]] inline js_object_ptr<raw::number> asNumber() const;
 
         /**
@@ -991,6 +1020,8 @@ namespace markusjx {
          *
          * @return the resulting pointer
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
         [[nodiscard]] inline js_object_ptr<raw::boolean> asBoolean() const;
 
         /**
@@ -998,6 +1029,8 @@ namespace markusjx {
          *
          * @return the resulting pointer
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::array, T>
         [[nodiscard]] inline js_object_ptr<raw::array> asArray() const;
 
         /**
@@ -1005,6 +1038,8 @@ namespace markusjx {
          *
          * @return the resulting pointer
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T>
         [[nodiscard]] inline js_object_ptr<raw::object> asObject() const;
 
         /**
@@ -1012,6 +1047,8 @@ namespace markusjx {
          *
          * @return the resulting pointer
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
         [[nodiscard]] inline js_object_ptr<raw::function> asFunction() const;
 
         // Overloaded operators for std::string, bool and double
@@ -1022,6 +1059,8 @@ namespace markusjx {
          *
          * @return the string value
          */
+        template<class = T>
+        requires std::is_same_v<raw::string, T> || std::is_same_v<raw::js_object, T>
         [[nodiscard]] inline operator std::string() const;
 
         /**
@@ -1029,6 +1068,8 @@ namespace markusjx {
          *
          * @return the bool value
          */
+        template<class = T>
+        requires std::is_same_v<raw::boolean, T> || std::is_same_v<raw::js_object, T>
         [[nodiscard]] inline operator bool() const;
 
         /**
@@ -1036,6 +1077,8 @@ namespace markusjx {
          *
          * @return the double value
          */
+        template<class = T>
+        requires std::is_same_v<raw::number, T> || std::is_same_v<raw::js_object, T>
         [[nodiscard]] inline operator double() const;
 
         /**
@@ -1043,6 +1086,8 @@ namespace markusjx {
          *
          * @return the int value
          */
+        template<class = T>
+        requires std::is_same_v<raw::number, T> || std::is_same_v<raw::js_object, T>
         [[nodiscard]] inline operator int() const;
 
         /**
@@ -2813,6 +2858,8 @@ namespace markusjx {
 
     // Specialized constructors. Only available when T = raw::js_object
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
     inline js_object_ptr<T>::js_object_ptr(const char *c) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
@@ -2829,6 +2876,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
     inline js_object_ptr<T>::js_object_ptr(bool b) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
@@ -2836,6 +2885,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     inline js_object_ptr<T>::js_object_ptr(int i) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
@@ -2843,6 +2894,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     inline js_object_ptr<T>::js_object_ptr(double d) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
@@ -2851,6 +2904,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T>
     inline js_object_ptr<T>::js_object_ptr(const js_object_ptr<U> &obj) {
         if constexpr (std::is_same_v<raw::js_object, U>) {
             // If U = raw::js_object, cast the data to T and then create new T from it
@@ -2890,6 +2944,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T>
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(const js_object_ptr<U> &other) {
         static_assert(std::is_same_v<raw::js_object, T>,
                       "Operator= with type = U is only allowed when T = raw::js_object");
@@ -3176,7 +3231,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator+(U val) const {
+    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator+(const U &val) const {
         if (ptr->getType() == raw::js_type::number) {
             // If U = std::string or U = const char *, create a string
             if constexpr (std::is_same_v<std::string, U> || std::is_same_v<const char *, U>) {
@@ -3229,6 +3284,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator-(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator- is only available when T = raw::js_object and its type is number or T = raw::number");
@@ -3261,6 +3317,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator*(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator* is only available when T = raw::js_object and its type is number or T = raw::number");
@@ -3292,6 +3349,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator/(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator/ is only available when T = raw::js_object and its type is number or T = raw::number");
@@ -3318,13 +3376,13 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    inline js_object_ptr<T> &js_object_ptr<T>::operator+=(U val) {
+    inline js_object_ptr<T> &js_object_ptr<T>::operator+=(const U &val) {
         return this->operator=(this->operator+(val));
     }
 
     template<class T>
     template<class U>
-    inline js_object_ptr<T> &js_object_ptr<T>::operator-=(U val) {
+    inline js_object_ptr<T> &js_object_ptr<T>::operator-=(const U &val) {
         return this->operator=(this->operator-(val));
     }
 
@@ -3336,11 +3394,13 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    inline js_object_ptr<T> &js_object_ptr<T>::operator/=(U val) {
+    inline js_object_ptr<T> &js_object_ptr<T>::operator/=(const U &val) {
         return this->operator=(this->operator/(val));
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     inline const js_object_ptr<T> js_object_ptr<T>::operator++(int n) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator++ is only available when T = number or T = js_object and its type is number");
@@ -3367,6 +3427,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     inline const js_object_ptr<T> js_object_ptr<T>::operator--(int n) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator-- is only available when T = number or T = js_object and its type is number");
@@ -3394,6 +3456,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator < is only available if T is one of raw::js_object, raw::number and their type is number");
@@ -3411,6 +3474,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator > is only available if T is one of raw::js_object, raw::number and their type is number");
@@ -3429,6 +3493,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<=(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator <= is only available if T is one of raw::js_object, raw::number and their type is number");
@@ -3446,6 +3511,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>=(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator >= is only available if T is one of raw::js_object, raw::number and their type is number");
@@ -3463,6 +3529,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<(const js_object_ptr<U> &val) const {
         static_assert(std::is_same_v<raw::js_object, U> || std::is_same_v<raw::number, U>,
                       "operator < is only available if U is one of raw::js_object, raw::number and their type is number");
@@ -3480,6 +3547,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>(const js_object_ptr<U> &val) const {
         static_assert(std::is_same_v<raw::js_object, U> || std::is_same_v<raw::number, U>,
                       "operator > is only available if U is one of raw::js_object, raw::number and their type is number");
@@ -3497,6 +3565,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<=(const js_object_ptr<U> &val) const {
         static_assert(std::is_same_v<raw::js_object, U> || std::is_same_v<raw::number, U>,
                       "operator <= is only available if U is one of raw::js_object, raw::number and their type is number");
@@ -3514,6 +3583,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>=(const js_object_ptr<U> &val) const {
         static_assert(std::is_same_v<raw::js_object, U> || std::is_same_v<raw::number, U>,
                       "operator >= is only available if U is one of raw::js_object, raw::number and their type is number");
@@ -3575,6 +3645,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
     [[nodiscard]] inline js_object_ptr<raw::string> js_object_ptr<T>::asString() const {
         // Throw compile-time error if asString is not called on a raw::js_object
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
@@ -3585,6 +3657,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     [[nodiscard]] inline js_object_ptr<raw::number> js_object_ptr<T>::asNumber() const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "asNumber can only be called on a raw object");
@@ -3594,6 +3668,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
     [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::asBoolean() const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>,
                       "asBoolean can only be called on a raw object");
@@ -3603,6 +3679,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::array, T>
     [[nodiscard]] inline js_object_ptr<raw::array> js_object_ptr<T>::asArray() const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::array, T>,
                       "asArray can only be called on a raw object");
@@ -3612,6 +3690,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T>
     [[nodiscard]] inline js_object_ptr<raw::object> js_object_ptr<T>::asObject() const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T>,
                       "asObject can only be called on a raw object");
@@ -3621,6 +3701,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
     [[nodiscard]] inline js_object_ptr<raw::function> js_object_ptr<T>::asFunction() const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>,
                       "asFunction can only be called on a raw object");
@@ -3633,6 +3715,8 @@ namespace markusjx {
     // Only available for the specific classes storing these
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::string, T> || std::is_same_v<raw::js_object, T>
     [[nodiscard]] inline js_object_ptr<T>::operator std::string() const {
         static_assert(std::is_same_v<raw::string, T> || std::is_same_v<raw::js_object, T>,
                       "operator std::string can only be used with a string type");
@@ -3648,6 +3732,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::boolean, T> || std::is_same_v<raw::js_object, T>
     [[nodiscard]] inline js_object_ptr<T>::operator bool() const {
         static_assert(std::is_same_v<raw::boolean, T> || std::is_same_v<raw::js_object, T>,
                       "operator bool can only be used with a boolean type");
@@ -3663,6 +3749,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::number, T> || std::is_same_v<raw::js_object, T>
     [[nodiscard]] inline js_object_ptr<T>::operator double() const {
         static_assert(std::is_same_v<raw::number, T> || std::is_same_v<raw::js_object, T>,
                       "operator double can only be used with a number type");
@@ -3687,6 +3775,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::number, T> || std::is_same_v<raw::js_object, T>
     [[nodiscard]] inline js_object_ptr<T>::operator int() const {
         return (int) this->operator double();
     }
