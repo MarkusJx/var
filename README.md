@@ -67,20 +67,20 @@ bool b1 = b;
 
 Functions can be called like functions
 ```c++
-var res = fn(5);
+markusjx::var res = fn(5);
 ```
 
 Array values can be accessed by indices
 ```c++
-var a_1 = arr[1];
+markusjx::var a_1 = arr[1];
 ```
 
 Object values can be accessed by their key values
 ```c++
-var o_0 = o[0];
+markusjx::var o_0 = o[0];
 
 // or
-var o_a = a["a"];
+markusjx::var o_a = a["a"];
 ```
 
 It is also possible to iterate over arrays
@@ -89,7 +89,7 @@ It is also possible to iterate over arrays
 using ``asArray()``**
 ```c++
 // must call asArray() on a var type to iterate
-for (const var& v : arr.asArray()) {
+for (const markusjx::var& v : arr.asArray()) {
     // Do something with value v
 }
 ```
