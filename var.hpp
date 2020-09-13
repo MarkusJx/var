@@ -249,6 +249,16 @@ namespace markusjx {
             }
 
             /**
+             * Get this object as a hash value. The default js_object will return 0 as a hash, null will return 1
+             * and undefined will return 2.
+             *
+             * @return the hash value
+             */
+            [[nodiscard]] virtual inline size_t hashValue() const {
+                return 0;
+            }
+
+            /**
              * Get the type of this as a string
              *
              * @return the type of this as a string
@@ -436,6 +446,8 @@ namespace markusjx {
         /**
          * Construct null. Only available when T = raw::js_object or raw::null
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>
         inline js_object_ptr(nullptr_t);
 
         /**
@@ -463,6 +475,7 @@ namespace markusjx {
          * @param func the function
          */
         template<class R, class...Args>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
         inline js_object_ptr(const std::function<R(Args...)> &func);
 
 #ifdef NAPI_VERSION
@@ -492,6 +505,8 @@ namespace markusjx {
          *
          * @param s the string containing the data
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
         inline js_object_ptr(const std::string &s);
 
         /**
@@ -517,31 +532,6 @@ namespace markusjx {
          * @param d the double value
          */
         inline js_object_ptr(double d);
-
-        /**
-         * Create a js_object_ptr<raw::js_object> from a vector<js_object_ptr<raw::js_object>> value.
-         * Will create a js_object_ptr<raw::array> and cast it to raw::js_object
-         *
-         * @param data the data array
-         */
-        inline js_object_ptr(const std::vector<js_object_ptr<raw::js_object>> &data);
-
-        /**
-         * Create a js_object_ptr from a initializer list. Will create a raw::array. If T = raw::js_object, the
-         * raw::array will be cast to a raw::js_object. Only available if T = raw::js_object or raw::array
-         *
-         * @param list
-         */
-        inline js_object_ptr(const std::initializer_list<js_object_ptr<raw::js_object>> &list);
-
-        /**
-         * Create a js_object_ptr from a map. Will create a raw::object. If T = raw::js_object, the raw::object will be
-         * cast to a raw::js_object. Only available if T = raw::js_object or raw::object
-         *
-         * @param data the data map
-         */
-        inline js_object_ptr(
-                const std::initializer_list<std::pair<const js_object_ptr<raw::js_object>, js_object_ptr<raw::js_object>>> &data);
 
         /**
          * Copy constructor
@@ -599,6 +589,8 @@ namespace markusjx {
          *
          * @return this
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>
         inline js_object_ptr<T> &operator=(nullptr_t);
 
         /**
@@ -607,6 +599,8 @@ namespace markusjx {
          * @param value the value to set
          * @return this
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
         inline js_object_ptr<T> &operator=(const char *value);
 
         /**
@@ -615,7 +609,9 @@ namespace markusjx {
          * @param value the value to set
          * @return this
          */
-        inline js_object_ptr<T> &operator=(std::string value);
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+        inline js_object_ptr<T> &operator=(const std::string &value);
 
         /**
          * Set a value. Only available when T = raw::js_object or T = raw::number
@@ -623,6 +619,8 @@ namespace markusjx {
          * @param value the value to set
          * @return this
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         inline js_object_ptr<T> &operator=(int value);
 
         /**
@@ -631,6 +629,8 @@ namespace markusjx {
          * @param value the value to set
          * @return this
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
         inline js_object_ptr<T> &operator=(double value);
 
         /**
@@ -639,6 +639,8 @@ namespace markusjx {
          * @param value the value to set
          * @return this
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
         inline js_object_ptr<T> &operator=(bool value);
 
         /**
@@ -650,6 +652,7 @@ namespace markusjx {
          * @return this
          */
         template<class R, class...Args>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
         inline js_object_ptr<T> &operator=(const std::function<R(Args...)> &func);
 
         /**
@@ -660,6 +663,7 @@ namespace markusjx {
          * @return the result of the function call
          */
         template<class...Args>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
         inline js_object_ptr<raw::js_object> operator()(Args...args);
 
         /**
@@ -672,6 +676,7 @@ namespace markusjx {
          * @return this
          */
         template<class...Types>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
         inline js_object_ptr<T> &append(Types...args);
 
 #ifdef NAPI_VERSION
@@ -693,6 +698,8 @@ namespace markusjx {
          * @param searchValue the value to search for
          * @return a reference to the object
          */
+        template<class = T>
+        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T> || std::is_same_v<raw::array, T>
         inline js_object_ptr<raw::js_object> &operator[](const js_object_ptr<raw::js_object> &searchValue);
 
         /**
@@ -903,6 +910,42 @@ namespace markusjx {
         [[nodiscard]] inline js_object_ptr<raw::boolean> operator>=(const js_object_ptr<U> &val) const;
 
         /**
+         * Get the begin iterator. Only available if T = raw::array or raw::object
+         *
+         * @return an iterator
+         */
+        template<class = T>
+        requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+        inline auto begin() noexcept;
+
+        /**
+         * Get the begin iterator. Only available if T = raw::array or raw::object
+         *
+         * @return an iterator
+         */
+        template<class = T>
+        requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+        [[nodiscard]] inline auto begin() const noexcept;
+
+        /**
+         * Get the end iterator. Only available if T = raw::array or raw::object
+         *
+         * @return an iterator
+         */
+        template<class = T>
+        requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+        inline auto end() noexcept;
+
+        /**
+         * Get the end iterator. Only available if T = raw::array or raw::object
+         *
+         * @return an iterator
+         */
+        template<class = T>
+        requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+        [[nodiscard]] inline auto end() const noexcept;
+
+        /**
          * Get this pointer as another object
          *
          * @tparam U the type to cast to
@@ -1042,6 +1085,13 @@ namespace markusjx {
         [[nodiscard]] inline std::string toString() const;
 
         /**
+         * Get the pointer as a hash
+         *
+         * @return the hash value
+         */
+        [[nodiscard]] inline size_t hashValue() const;
+
+        /**
          * Get the underlying pointer
          *
          * @return the underlying pointer
@@ -1078,15 +1128,21 @@ namespace markusjx {
     using string = js_object_ptr<raw::string>;
     using number = js_object_ptr<raw::number>;
     using boolean = js_object_ptr<raw::boolean>;
+    using function = js_object_ptr<raw::function>;
     using object = js_object_ptr<raw::object>;
     using array = js_object_ptr<raw::array>;
     using null_ptr = js_object_ptr<raw::null>;
     using undefined_ptr = js_object_ptr<raw::undefined>;
 
     /**
-     * A variable data type
+     * A variable data type. Somewhat equal to js var
      */
     using var = js_object;
+
+    /**
+     * A const var. Equal to js const
+     */
+    using const_val = const var;
 
 #ifdef NAPI_VERSION
 
@@ -1148,6 +1204,15 @@ namespace markusjx {
             }
 
             /**
+             * Get this as a hash
+             *
+             * @return the hash value
+             */
+            [[nodiscard]] inline size_t hashValue() const override {
+                return 2;
+            }
+
+            /**
              * The destructor
              */
             inline ~undefined() override = default;
@@ -1203,6 +1268,15 @@ namespace markusjx {
              */
             [[nodiscard]] inline std::string toString() const override {
                 return "null";
+            }
+
+            /**
+             * Get this as a hash
+             *
+             * @return the hash value
+             */
+            [[nodiscard]] inline size_t hashValue() const override {
+                return 1;
             }
 
             /**
@@ -1289,6 +1363,16 @@ namespace markusjx {
                 } else {
                     return "false";
                 }
+            }
+
+            /**
+             * Get this as a hash
+             *
+             * @return the hash value
+             */
+            [[nodiscard]] inline size_t hashValue() const override {
+                std::hash<bool> h;
+                return h(value);
             }
 
             /**
@@ -1415,6 +1499,16 @@ namespace markusjx {
                 str.erase(str.find_last_not_of('0') + 1, std::string::npos);
                 if (str.ends_with('.')) str.pop_back();
                 return str;
+            }
+
+            /**
+             * Get this as a hash
+             *
+             * @return the hash value
+             */
+            [[nodiscard]] inline size_t hashValue() const override {
+                std::hash<double> h;
+                return h(value);
             }
 
             /**
@@ -1573,7 +1667,7 @@ namespace markusjx {
              *
              * @return this
              */
-            inline const number &operator++(int) {
+            inline number operator++(int) {
                 value = value + 1;
                 return *this;
             }
@@ -1583,7 +1677,7 @@ namespace markusjx {
              *
              * @return this
              */
-            inline const number operator--(int) {
+            inline number operator--(int) {
                 value = value - 1;
                 return *this;
             }
@@ -1862,6 +1956,16 @@ namespace markusjx {
             }
 
             /**
+             * Get this as a hash
+             *
+             * @return the hash value
+             */
+            [[nodiscard]] inline size_t hashValue() const override {
+                std::hash<std::string> h;
+                return h(*this);
+            }
+
+            /**
              * Create a string from characters
              *
              * @tparam Args the argument types
@@ -1925,6 +2029,13 @@ namespace markusjx {
             inline array(const std::initializer_list<::markusjx::var> &list) : values(list) {}
 
             /**
+             * Copy constructor
+             *
+             * @param arr the object to copy from
+             */
+            inline array(const array &arr) : values(arr.values) {}
+
+            /**
              * Get a value by an index
              *
              * @param index the index
@@ -1944,6 +2055,42 @@ namespace markusjx {
              */
             [[nodiscard]] inline size_t length() const {
                 return values.size();
+            }
+
+            /**
+             * Get the begin iterator
+             *
+             * @return an iterator
+             */
+            inline auto begin() noexcept {
+                return values.begin();
+            }
+
+            /**
+             * Get the begin iterator
+             *
+             * @return an iterator
+             */
+            inline auto begin() const noexcept {
+                return values.begin();
+            }
+
+            /**
+             * Get the end iterator
+             *
+             * @return an iterator
+             */
+            inline auto end() noexcept {
+                return values.end();
+            }
+
+            /**
+             * Get the end iterator
+             *
+             * @return an iterator
+             */
+            inline auto end() const noexcept {
+                return values.end();
             }
 
             /**
@@ -2063,6 +2210,21 @@ namespace markusjx {
             }
 
             /**
+             * Get this as a hash.
+             * Hash function source: https://stackoverflow.com/a/27216842/14148409
+             *
+             * @return the hash value
+             */
+            [[nodiscard]] inline size_t hashValue() const override {
+                size_t seed = values.size();
+                for (const ::markusjx::var &v : values) {
+                    seed ^= v.hashValue() + 0x9e3779b9 + (seed << (unsigned) 6) + (seed >> (unsigned) 2);
+                }
+
+                return seed;
+            }
+
+            /**
              * The destructor
              */
             inline ~array() override = default;
@@ -2071,9 +2233,12 @@ namespace markusjx {
             std::vector<::markusjx::js_object> values;
         };
 
-        struct cmpVarByPtr {
-            bool operator()(const ::markusjx::var &lv, const ::markusjx::var &rv) const {
-                return lv.get() < rv.get();
+        /**
+         * A struct for comparing vars by hash values. Used for map search.
+         */
+        struct cmpVarByHash {
+            inline bool operator()(const ::markusjx::var &lv, const ::markusjx::var &rv) const {
+                return lv.hashValue() < rv.hashValue();
             }
         };
 
@@ -2123,8 +2288,15 @@ namespace markusjx {
              *
              * @param m the map to construct from
              */
-            object(const std::initializer_list<std::pair<const ::markusjx::var, ::markusjx::var>> &list) : contents(
-                    list) {}
+            inline object(const std::initializer_list<std::pair<const ::markusjx::var, ::markusjx::var>> &list)
+                    : contents(list) {}
+
+            /**
+             * Copy constructor
+             *
+             * @param obj the object to copy from
+             */
+            inline object(const object &obj) : contents(obj.contents) {}
 
             /**
              * Get the length of the object
@@ -2133,6 +2305,51 @@ namespace markusjx {
              */
             [[nodiscard]] inline size_t length() const {
                 return contents.size();
+            }
+
+            /**
+             * Get the content map of this object
+             *
+             * @return the content map
+             */
+            [[nodiscard]] inline std::map<::markusjx::var, ::markusjx::var, cmpVarByHash> getContents() const {
+                return contents;
+            }
+
+            /**
+             * Get the begin iterator
+             *
+             * @return an iterator
+             */
+            inline auto begin() noexcept {
+                return contents.begin();
+            }
+
+            /**
+             * Get the begin iterator
+             *
+             * @return an iterator
+             */
+            inline auto begin() const noexcept {
+                return contents.begin();
+            }
+
+            /**
+             * Get the end iterator
+             *
+             * @return an iterator
+             */
+            inline auto end() noexcept {
+                return contents.end();
+            }
+
+            /**
+             * Get the end iterator
+             *
+             * @return an iterator
+             */
+            inline auto end() const noexcept {
+                return contents.end();
             }
 
             /**
@@ -2200,12 +2417,28 @@ namespace markusjx {
             }
 
             /**
+             * Get this as a hash.
+             * Hash function source: https://stackoverflow.com/a/27216842/14148409
+             *
+             * @return the hash value
+             */
+            [[nodiscard]] inline size_t hashValue() const override {
+                size_t seed = contents.size();
+                for (const auto &p : contents) {
+                    seed ^= p.first.hashValue() + 0x9e3779b9 + (seed << (unsigned) 6) + (seed >> (unsigned) 2);
+                    seed ^= p.second.hashValue() + 0x9e3779b9 + (seed << (unsigned) 6) + (seed >> (unsigned) 2);
+                }
+
+                return seed;
+            }
+
+            /**
              * The destructor
              */
             inline ~object() override = default;
 
         private:
-            std::map<::markusjx::var, ::markusjx::var, cmpVarByPtr> contents;
+            std::map<::markusjx::var, ::markusjx::var, cmpVarByHash> contents;
         };
 
         /**
@@ -2323,6 +2556,13 @@ namespace markusjx {
                     }
                 };
             }
+
+            /**
+             * Copy constructor
+             *
+             * @param fn the function to copy from
+             */
+            inline function(const function &fn) : func(fn.func) {}
 
             /**
              * operator() to call this
@@ -2459,7 +2699,7 @@ namespace markusjx {
             /**
              * The destructor
              */
-            inline ~function() = default;
+            inline ~function() override = default;
 
         private:
 #ifdef NAPI_VERSION
@@ -2516,6 +2756,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>
     inline js_object_ptr<T>::js_object_ptr(nullptr_t) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>,
                       "Null can only be constructed when T = raw::js_object or raw::null");
@@ -2539,6 +2781,7 @@ namespace markusjx {
 
     template<class T>
     template<class R, class...Args>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
     inline js_object_ptr<T>::js_object_ptr(const std::function<R(Args...)> &func) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>,
                       "Specialized constructors are not allowed when the type is raw::js_object");
@@ -2563,6 +2806,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
     inline js_object_ptr<T>::js_object_ptr(const std::string &s) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
@@ -2588,28 +2833,6 @@ namespace markusjx {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
         ptr = (T *) new raw::number(d);
-    }
-
-    template<class T>
-    inline js_object_ptr<T>::js_object_ptr(const std::vector<js_object_ptr<raw::js_object>> &data) {
-        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::array, T>,
-                      "Specialized constructors are not allowed when the type is not raw::js_object");
-        ptr = (T *) new raw::array(data);
-    }
-
-    template<class T>
-    inline js_object_ptr<T>::js_object_ptr(const std::initializer_list<js_object_ptr<raw::js_object>> &list) {
-        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::array, T>,
-                      "Specialized constructors are not allowed when the type is not raw::js_object");
-        ptr = (T *) new raw::array(list);
-    }
-
-    template<class T>
-    inline js_object_ptr<T>::js_object_ptr(
-            const std::initializer_list<std::pair<const ::markusjx::var, ::markusjx::var>> &data) {
-        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T>,
-                      "Specialized constructors are not allowed when the type is not raw::js_object");
-        ptr = (T *) new raw::object(data);
     }
 
     template<class T>
@@ -2680,6 +2903,8 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(nullptr_t) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>,
                       "Object can only be set to null when T = raw::js_object or raw::null");
@@ -2690,52 +2915,108 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(const char *value) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "this operator overload is only available when T = raw::js_object or T = raw::string");
-        ptr->operator=(value);
+        if constexpr (std::is_same_v<raw::js_object, T>) {
+            if (get()->getType() == raw::js_type::string) {
+                ((raw::string *) ptr)->operator=(value);
+            } else {
+                delete ptr;
+                ptr = new raw::string(value);
+            }
+        } else {
+            ptr->operator=(value);
+        }
 
         return *this;
     }
 
     template<class T>
-    inline js_object_ptr<T> &js_object_ptr<T>::operator=(std::string value) {
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+    inline js_object_ptr<T> &js_object_ptr<T>::operator=(const std::string &value) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "this operator overload is only available when T = raw::js_object or T = raw::string");
-        ptr->operator=(value);
+        if constexpr (std::is_same_v<raw::js_object, T>) {
+            if (get()->getType() == raw::js_type::string) {
+                ((raw::string *) ptr)->assign(value);
+            } else {
+                delete ptr;
+                ptr = new raw::string(value.begin(), value.end());
+            }
+        } else {
+            ptr->operator=(value);
+        }
 
         return *this;
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(int value) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "this operator overload is only available when T = raw::js_object or T = raw::number");
-        ptr->operator=(value);
+        if constexpr (std::is_same_v<raw::js_object, T>) {
+            if (get()->getType() == raw::js_type::number) {
+                ((raw::number *) ptr)->operator=(value);
+            } else {
+                delete ptr;
+                ptr = new raw::number(value);
+            }
+        } else {
+            ptr->operator=(value);
+        }
 
         return *this;
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(double value) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "this operator overload is only available when T = raw::js_object or T = raw::number");
-        ptr->operator=(value);
+        if constexpr (std::is_same_v<raw::js_object, T>) {
+            if (get()->getType() == raw::js_type::number) {
+                ((raw::number *) ptr)->operator=(value);
+            } else {
+                delete ptr;
+                ptr = new raw::number(value);
+            }
+        } else {
+            ptr->operator=(value);
+        }
 
         return *this;
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(bool value) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>,
                       "this operator overload is only available when T = raw::js_object or T = raw::boolean");
-        ptr->operator=(value);
+        if constexpr (std::is_same_v<raw::js_object, T>) {
+            if (get()->getType() == raw::js_type::boolean) {
+                ((raw::boolean *) ptr)->operator=(value);
+            } else {
+                delete ptr;
+                ptr = new raw::boolean(value);
+            }
+        } else {
+            ptr->operator=(value);
+        }
 
         return *this;
     }
 
     template<class T>
     template<class R, class...Args>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(const std::function<R(Args...)> &func) {
         delete ptr;
         ptr = new raw::function(func);
@@ -2745,6 +3026,7 @@ namespace markusjx {
 
     template<class T>
     template<class...Args>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
     inline js_object_ptr<raw::js_object> js_object_ptr<T>::operator()(Args...args) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>,
                       "operator() is only available when T = raw::js_object and its type is function or T = raw::function");
@@ -2762,6 +3044,7 @@ namespace markusjx {
 
     template<class T>
     template<class...Types>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
     inline js_object_ptr<T> &js_object_ptr<T>::append(Types...args) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "append is only available when T = raw::js_object and its type is string or T = raw::string");
@@ -2769,96 +3052,6 @@ namespace markusjx {
         [[maybe_unused]] volatile auto x = {(toAppend.append(raw::varArgToString(args)), 0)...};
 
         return this->operator+=(toAppend);
-    }
-
-    /**
-     * Set a value. Only available when T = raw::js_object or T = raw::string
-     *
-     * @param value the value to set
-     * @return this
-     */
-    template<>
-    inline js_object_ptr<raw::js_object> &js_object_ptr<raw::js_object>::operator=(const char *value) {
-        if (get()->getType() == raw::js_type::string) {
-            ((raw::string *) ptr)->operator=(value);
-        } else {
-            delete ptr;
-            ptr = new raw::string(value);
-        }
-
-        return *this;
-    }
-
-    /**
-     * Set a value. Only available when T = raw::js_object or T = raw::string
-     *
-     * @param value the value to set
-     * @return this
-     */
-    template<>
-    inline js_object_ptr<raw::js_object> &js_object_ptr<raw::js_object>::operator=(std::string value) {
-        if (get()->getType() == raw::js_type::string) {
-            ((raw::string *) ptr)->assign(value);
-        } else {
-            delete ptr;
-            ptr = new raw::string(value.begin(), value.end());
-        }
-
-        return *this;
-    }
-
-    /**
-     * Set a value. Only available when T = raw::js_object or T = raw::number
-     *
-     * @param value the value to set
-     * @return this
-     */
-    template<>
-    inline js_object_ptr<raw::js_object> &js_object_ptr<raw::js_object>::operator=(int value) {
-        if (get()->getType() == raw::js_type::number) {
-            ((raw::number *) ptr)->operator=(value);
-        } else {
-            delete ptr;
-            ptr = new raw::number(value);
-        }
-
-        return *this;
-    }
-
-    /**
-     * Set a value. Only available when T = raw::js_object or T = raw::number
-     *
-     * @param value the value to set
-     * @return this
-     */
-    template<>
-    inline js_object_ptr<raw::js_object> &js_object_ptr<raw::js_object>::operator=(double value) {
-        if (get()->getType() == raw::js_type::number) {
-            ((raw::number *) ptr)->operator=(value);
-        } else {
-            delete ptr;
-            ptr = new raw::number(value);
-        }
-
-        return *this;
-    }
-
-    /**
-     * Set a value. Only available when T = raw::js_object or T = raw::boolean
-     *
-     * @param value the value to set
-     * @return this
-     */
-    template<>
-    inline js_object_ptr<raw::js_object> &js_object_ptr<raw::js_object>::operator=(bool value) {
-        if (get()->getType() == raw::js_type::boolean) {
-            ((raw::boolean *) ptr)->operator=(value);
-        } else {
-            delete ptr;
-            ptr = new raw::boolean(value);
-        }
-
-        return *this;
     }
 
 #ifdef NAPI_VERSION
@@ -2927,6 +3120,8 @@ namespace markusjx {
 #endif //NAPI_VERSION
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T> || std::is_same_v<raw::array, T>
     inline js_object_ptr<raw::js_object> &
     js_object_ptr<T>::operator[](const js_object_ptr<raw::js_object> &searchValue) {
         static_assert(
@@ -3321,6 +3516,34 @@ namespace markusjx {
     }
 
     template<class T>
+    template<class>
+    requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+    inline auto js_object_ptr<T>::begin() noexcept {
+        return ptr->begin();
+    }
+
+    template<class T>
+    template<class>
+    requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+    [[nodiscard]] inline auto js_object_ptr<T>::begin() const noexcept {
+        return ptr->begin();
+    }
+
+    template<class T>
+    template<class>
+    requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+    inline auto js_object_ptr<T>::end() noexcept {
+        return ptr->end();
+    }
+
+    template<class T>
+    template<class>
+    requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+    [[nodiscard]] inline auto js_object_ptr<T>::end() const noexcept {
+        return ptr->end();
+    }
+
+    template<class T>
     template<class U>
     [[nodiscard]] inline U *js_object_ptr<T>::as() const {
         return (U *) ptr;
@@ -3369,7 +3592,7 @@ namespace markusjx {
     [[nodiscard]] inline js_object_ptr<raw::array> js_object_ptr<T>::asArray() const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::array, T>,
                       "asArray can only be called on a raw object");
-        if (ptr->getType() != raw::js_type::string)
+        if (ptr->getType() != raw::js_type::array)
             throw argumentMismatchException("asArray can only be called on a raw object of type array");
         return to<raw::array>();
     }
@@ -3476,6 +3699,11 @@ namespace markusjx {
     }
 
     template<class T>
+    [[nodiscard]] inline size_t js_object_ptr<T>::hashValue() const {
+        return ptr->hashValue();
+    }
+
+    template<class T>
     [[nodiscard]] inline T *js_object_ptr<T>::get() const {
         return ptr;
     }
@@ -3504,6 +3732,8 @@ namespace markusjx {
             return new raw::object(*((raw::object *) current));
         } else if (current->getType() == raw::js_type::array) {
             return new raw::array(*((raw::array *) current));
+        } else if (current->getType() == raw::js_type::function) {
+            return new raw::function(*((raw::function *) current));
         } else if (current->getType() == raw::js_type::string) {
             return new raw::string(*((raw::string *) current));
         } else if (current->getType() == raw::js_type::boolean) {
