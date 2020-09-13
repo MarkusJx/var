@@ -50,7 +50,7 @@ markusjx::var arr = markusjx::array({0, 1, "abc", false});
 **NOTE: Objects must be created with explicit ``markusjx::object(1)`` constructor.
 Objects can only accept arguments of types ``markusjx::var`` can accept.**
 
-Also not that functions cannot be used as keys in objects. If tried, an
+Also note that functions cannot be used as keys in objects. If tried, an
 ```markusjx::argumentMismatchException``` will be thrown.
 
 Create using ``std::initializer_list``:
