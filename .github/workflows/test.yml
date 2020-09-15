@@ -25,7 +25,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
     - name: install and gcc-10 macOs
       if: matrix.os == 'macOs-latest'
-      run: brew install gcc@10 -y
+      run: brew install gcc@10 && which gcc-10
     - uses: actions/checkout@v1
     - name: configure ubuntu
       run: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Werror" . -B build
