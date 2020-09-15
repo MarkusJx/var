@@ -12,11 +12,14 @@ int main() {
         v = "abc";
         std::cout << v << std::endl;
 
+        int s = 0;
+        int x = 4;
+
         v = v + 5;
 
         std::cout << v << std::endl;
 
-        v = [](var i) {
+        v = [](const var& i) {
             std::cout << i << std::endl;
             return i;
         };

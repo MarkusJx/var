@@ -371,40 +371,15 @@ namespace markusjx {
          */
         template<class T>
         inline std::string varArgToString(T val) {
-            return std::to_string(val);
-        }
-
-        /**
-         * Convert a boolean value to string
-         *
-         * @param val the value
-         * @return the resulting string
-         */
-        template<>
-        inline std::string varArgToString(bool val) {
-            return val ? "true" : "false";
-        }
-
-        /**
-         * Convert a const char array to string
-         *
-         * @param val the value
-         * @return the resulting string
-         */
-        template<>
-        inline std::string varArgToString(const char *val) {
-            return std::string(val);
-        }
-
-        /**
-         * Template specialization for std::string
-         *
-         * @param val the string value
-         * @return val
-         */
-        template<>
-        inline std::string varArgToString(const std::string &val) {
-            return val;
+            if constexpr (std::is_same_v<T, bool>) {
+                return std::string(val);
+            } else if constexpr (std::is_same_v<T, const char *>) {
+                return val ? "true" : "false";
+            } else if constexpr (std::is_same_v<T, std::string>) {
+                return val;
+            } else {
+                return std::to_string(val);
+            }
         }
 
         class undefined;
@@ -2831,7 +2806,9 @@ namespace markusjx {
     template<class T>
     template<class U>
     inline js_object_ptr<T>::js_object_ptr(U obj) {
-        if constexpr (std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>) {
+        if constexpr ((std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>) &&
+                      !(std::is_same_v<int, U> || std::is_same_v<double, U> || std::is_same_v<bool, U> ||
+                        std::is_same_v<const char *, U> || std::is_same_v<std::decay<std::string>, U>)) {
             ptr = new raw::function(std::function(obj));
         } else {
             ptr = new T(obj);
@@ -3405,17 +3382,19 @@ namespace markusjx {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator++ is only available when T = number or T = js_object and its type is number");
         if constexpr (std::is_same_v<raw::number, T>) {
-            ptr->operator++(n);
+            return ptr->operator++(n);
         } else {
             if (ptr->isNumber()) {
-                ((raw::number *) ptr)->operator++(n);
+                return ((raw::number *) ptr)->operator++(n).operator double();
             } else if (ptr->isString()) {
                 char *p;
                 double d = std::strtod(this->operator std::string().c_str(), &p);
                 if (*p) {
                     throw conversionException("Unable to convert string to double");
                 } else {
-                    return raw::number(d).operator++(n);
+                    delete ptr;
+                    ptr = new raw::number(d);
+                    return ((raw::number *) ptr)->operator++(n).operator double();
                 }
             } else {
                 throw argumentMismatchException(
@@ -3436,14 +3415,16 @@ namespace markusjx {
             ptr->operator--(n);
         } else {
             if (ptr->isNumber()) {
-                ((raw::number *) ptr)->operator--(n);
+                ((raw::number *) ptr)->operator--(n).operator double();
             } else if (ptr->isString()) {
                 char *p;
                 double d = std::strtod(this->operator std::string().c_str(), &p);
                 if (*p) {
                     throw conversionException("Unable to convert string to double");
                 } else {
-                    return raw::number(d).operator--(n);
+                    delete ptr;
+                    ptr = new raw::number(d);
+                    return ((raw::number *) ptr)->operator--(n).operator double();
                 }
             } else {
                 throw argumentMismatchException(
