@@ -18,8 +18,11 @@ jobs:
       run: sudo apt-get install g++-10 gcc-10 -y
     - uses: actions/checkout@v1
     - name: configure
-      run: mkdir build && cd build && export CC=/usr/bin/gcc-10 && export CXX=/usr/bin/g++-10 && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Werror" ..
+      run: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Werror" . -B build
       working-directory: test
+      env:
+        CC: '/usr/bin/gcc-10'
+        CXX: '/usr/bin/g++-10'
     - name: build
       run: cmake --build .
       working-directory: test/build
