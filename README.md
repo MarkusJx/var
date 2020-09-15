@@ -1,4 +1,4 @@
-# var
+# var ![test](https://github.com/MarkusJx/var/workflows/test/badge.svg)
 A (JavaScript-like) variable data type for C++. Accepts strings, numbers, arrays,
 objects (maps) and functions. May throw weird errors.
 
