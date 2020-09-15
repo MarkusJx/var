@@ -17,15 +17,18 @@ jobs:
 
     steps:
     # Install gtest. Based on: https://github.com/bastianhjaeger/github_actions_gtest_example
-    - name: Install gtest ubuntu
+    - name: install gtest ubuntu
       run: sudo apt-get install libgtest-dev && cd /usr/src/gtest && sudo cmake CMakeLists.txt && sudo make && sudo cp *.a /usr/lib && sudo ln -s /usr/lib/libgtest.a /usr/local/lib/libgtest.a && sudo ln -s /usr/lib/libgtest_main.a /usr/local/lib/libgtest_main.a
       if: matrix.os == 'ubuntu-latest'
     - name: install g++-10 and gcc-10 ubuntu
       run: sudo apt-get install g++-10 gcc-10 -y
       if: matrix.os == 'ubuntu-latest'
-    - name: install and gcc-10 macOs
+    #- name: install and gcc-10 macOs
+    #  if: matrix.os == 'macOs-latest'
+    #  run: brew install gcc@10 && which gcc-10
+    - name: install gtest macOs
       if: matrix.os == 'macOs-latest'
-      run: brew install gcc@10 && which gcc-10
+      run: brew install --HEAD https://gist.githubusercontent.com/Kronuz/96ac10fbd8472eb1e7566d740c4034f8/raw/gtest.rb
     - uses: actions/checkout@v1
     - name: configure ubuntu
       run: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Werror" . -B build
