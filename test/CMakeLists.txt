@@ -27,11 +27,6 @@ if (WIN32)
     set(CMAKE_CXX_FLAGS_DEBUG "/MTd")
 endif ()
 
-if (APPLE)
-    set(CMAKE_CXX_COMPILER /usr/local/bin/g++-10)
-    set(CMAKE_C_COMPILER /usr/local/bin/gcc-10)
-endif ()
-
 add_executable(test ${test_src})
 
 if (WIN32)
