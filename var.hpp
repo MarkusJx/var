@@ -33,6 +33,52 @@
 #include <type_traits>
 #include <functional>
 
+#if defined(_MSVC_LANG) || defined(__cplusplus)
+#   if (defined(_MSVC_LANG) && _MSVC_LANG > 201703L) || __cplusplus > 201703L // C++20
+#       define VAR_TEMPLATE(cls) template<cls>
+#       define VAR_REQUIRES_ONE(type, t1) requires std::is_same_v<t1, type>
+#       define VAR_REQUIRES_THREE(type, t1, t2, t3) requires std::is_same_v<t1, type> || std::is_same_v<t2, type> || std::is_same_v<t3, type>
+#       define VAR_REQUIRES(type, t1, t2) requires std::is_same_v<t1, type> || std::is_same_v<t2, type>
+#       define VAR_HAS_CXX20
+#   endif
+
+#   if (defined(_MSVC_LANG) && _MSVC_LANG > 201402L) || __cplusplus > 201402L // C++17
+#       define VAR_NODISCARD [[nodiscard]]
+#       define VAR_UNUSED [[maybe_unused]]
+#       define VAR_HAS_CXX17
+#   endif
+
+#   if (defined(_MSVC_LANG) && _MSVC_LANG > 201103L) || __cplusplus > 201103L // C++14
+#       if !defined(VAR_HAS_CXX17) && !defined(VAR_HAS_CXX20)
+#           error Use of C++14 and lower is not (yet) supported. Please use C++17 or C++20 instead
+#       endif
+#   endif
+#endif
+
+#ifndef VAR_TEMPLATE
+#   define VAR_TEMPLATE(cls)
+#endif
+
+#ifndef VAR_REQUIRES_ONE
+#   define VAR_REQUIRES_ONE(type, t1)
+#endif
+
+#ifndef VAR_REQUIRES
+#   define VAR_REQUIRES(type, t1, t2)
+#endif
+
+#ifndef VAR_REQUIRES_THREE
+#   define VAR_REQUIRES_THREE(type, t1, t2, t3)
+#endif
+
+#ifndef VAR_NODISCARD
+#   define VAR_NODISCARD
+#endif
+
+#ifndef VAR_UNUSED
+#   define VAR_UNUSED
+#endif
+
 /**
  * markusJx namespace
  */
@@ -56,7 +102,7 @@ namespace markusjx {
          *
          * @return the error message
          */
-        [[nodiscard]] const char *what() const noexcept override {
+        VAR_NODISCARD const char *what() const noexcept override {
             return msg;
         }
 
@@ -96,7 +142,7 @@ namespace markusjx {
          *
          * @return the exception type
          */
-        [[nodiscard]] const char *getType() const noexcept {
+        VAR_NODISCARD const char *getType() const noexcept {
             return type;
         }
 
@@ -212,7 +258,7 @@ namespace markusjx {
              * @param env the target environment
              * @return the n-api value
              */
-            [[nodiscard]] virtual inline Napi::Value getValue(const Napi::Env &env) const {
+            VAR_NODISCARD virtual inline Napi::Value getValue(const Napi::Env &env) const {
                 return env.Undefined();
             }
 
@@ -223,7 +269,7 @@ namespace markusjx {
              *
              * @return true, if both objects are the same type and value
              */
-            [[nodiscard]] virtual inline bool operator==(const js_object_ptr<js_object> &) const {
+            VAR_NODISCARD virtual inline bool operator==(const js_object_ptr<js_object> &) const {
                 return false;
             }
 
@@ -232,7 +278,7 @@ namespace markusjx {
              *
              * @return the type of this object
              */
-            [[nodiscard]] virtual inline js_type getType() const {
+            VAR_NODISCARD virtual inline js_type getType() const {
                 return js_type::none;
             }
 
@@ -244,7 +290,7 @@ namespace markusjx {
              *
              * @return this type or this type's value as a string
              */
-            [[nodiscard]] virtual inline std::string toString() const {
+            VAR_NODISCARD virtual inline std::string toString() const {
                 return "none";
             }
 
@@ -254,7 +300,7 @@ namespace markusjx {
              *
              * @return the hash value
              */
-            [[nodiscard]] virtual inline size_t hashValue() const {
+            VAR_NODISCARD virtual inline size_t hashValue() const {
                 return 0;
             }
 
@@ -263,7 +309,7 @@ namespace markusjx {
              *
              * @return the type of this as a string
              */
-            [[nodiscard]] inline std::string getTypeAsString() const {
+            VAR_NODISCARD inline std::string getTypeAsString() const {
                 return js_type_toString(this->getType());
             }
 
@@ -272,7 +318,7 @@ namespace markusjx {
              *
              * @return true, if this is of type string
              */
-            [[nodiscard]] inline bool isString() const {
+            VAR_NODISCARD inline bool isString() const {
                 return getType() == js_type::string;
             }
 
@@ -281,7 +327,7 @@ namespace markusjx {
              *
              * @return true, if this is of type number
              */
-            [[nodiscard]] inline bool isNumber() const {
+            VAR_NODISCARD inline bool isNumber() const {
                 return getType() == js_type::number;
             }
 
@@ -290,7 +336,7 @@ namespace markusjx {
              *
              * @return true, if this is of type boolean
              */
-            [[nodiscard]] inline bool isBoolean() const {
+            VAR_NODISCARD inline bool isBoolean() const {
                 return getType() == js_type::boolean;
             }
 
@@ -299,7 +345,7 @@ namespace markusjx {
              *
              * @return true, if this is of type array
              */
-            [[nodiscard]] inline bool isArray() const {
+            VAR_NODISCARD inline bool isArray() const {
                 return getType() == js_type::array;
             }
 
@@ -308,7 +354,7 @@ namespace markusjx {
              *
              * @return true, if this is of type object
              */
-            [[nodiscard]] inline bool isObject() const {
+            VAR_NODISCARD inline bool isObject() const {
                 return getType() == js_type::object;
             }
 
@@ -317,7 +363,7 @@ namespace markusjx {
              *
              * @return true, if this is of type function
              */
-            [[nodiscard]] inline bool isFunction() const {
+            VAR_NODISCARD inline bool isFunction() const {
                 return getType() == js_type::function;
             }
 
@@ -326,7 +372,7 @@ namespace markusjx {
              *
              * @return true, if this is of type undefined
              */
-            [[nodiscard]] inline bool isUndefined() const {
+            VAR_NODISCARD inline bool isUndefined() const {
                 return getType() == js_type::undefined;
             }
 
@@ -335,14 +381,14 @@ namespace markusjx {
              *
              * @return true, if this is of type null
              */
-            [[nodiscard]] inline bool isNull() const {
+            VAR_NODISCARD inline bool isNull() const {
                 return getType() == js_type::null;
             }
 
             /**
              * The default js_object destructor
              */
-            [[maybe_unused]] virtual inline ~js_object() = default;
+            VAR_UNUSED virtual inline ~js_object() = default;
         };
 
         /**
@@ -357,7 +403,7 @@ namespace markusjx {
         inline std::vector<T> convertArgsToVector(Args...args) {
             std::vector<T> argv;
             // Use volatile to disable optimization
-            [[maybe_unused]] volatile auto x = {(argv.push_back(args), 0)...};
+            VAR_UNUSED volatile auto x = {(argv.push_back(args), 0)...};
 
             return argv;
         }
@@ -421,12 +467,12 @@ namespace markusjx {
         /**
          * Construct null. Only available when T = raw::js_object or raw::null
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::null)
+
         inline js_object_ptr(nullptr_t);
 
         /**
-         * Create a js_object_ptr from an existing poitner
+         * Create a js_object_ptr from an existing pointer
          *
          * @param obj_ptr the already existing pointer
          */
@@ -450,7 +496,7 @@ namespace markusjx {
          * @param func the function
          */
         template<class R, class...Args>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
+        VAR_REQUIRES(T, raw::js_object, raw::function)
         inline js_object_ptr(const std::function<R(Args...)> &func);
 
 #ifdef NAPI_VERSION
@@ -472,8 +518,8 @@ namespace markusjx {
          *
          * @param c the char array containing data
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::string)
+
         inline js_object_ptr(const char *c);
 
         /**
@@ -482,8 +528,8 @@ namespace markusjx {
          *
          * @param s the string containing the data
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::string)
+
         inline js_object_ptr(const std::string &s);
 
         /**
@@ -492,8 +538,8 @@ namespace markusjx {
          *
          * @param b the bool value
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::boolean)
+
         inline js_object_ptr(bool b);
 
         /**
@@ -502,8 +548,8 @@ namespace markusjx {
          *
          * @param i the integer value
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
+
         inline js_object_ptr(int i);
 
         /**
@@ -512,8 +558,8 @@ namespace markusjx {
          *
          * @param d the double value
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
+
         inline js_object_ptr(double d);
 
         /**
@@ -523,7 +569,7 @@ namespace markusjx {
          * @param obj the object to copy from
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T>
+        VAR_REQUIRES_ONE(T, raw::js_object)
         inline js_object_ptr(const js_object_ptr<U> &obj);
 
         /**
@@ -556,7 +602,7 @@ namespace markusjx {
          * @return this
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T>
+        VAR_REQUIRES_ONE(T, raw::js_object)
         inline js_object_ptr<T> &operator=(const js_object_ptr<U> &other);
 
         /**
@@ -574,8 +620,8 @@ namespace markusjx {
          *
          * @return this
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::null)
+
         inline js_object_ptr<T> &operator=(nullptr_t);
 
         /**
@@ -584,8 +630,8 @@ namespace markusjx {
          * @param value the value to set
          * @return this
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::string)
+
         inline js_object_ptr<T> &operator=(const char *value);
 
         /**
@@ -594,8 +640,8 @@ namespace markusjx {
          * @param value the value to set
          * @return this
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::string)
+
         inline js_object_ptr<T> &operator=(const std::string &value);
 
         /**
@@ -604,8 +650,8 @@ namespace markusjx {
          * @param value the value to set
          * @return this
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
+
         inline js_object_ptr<T> &operator=(int value);
 
         /**
@@ -614,8 +660,8 @@ namespace markusjx {
          * @param value the value to set
          * @return this
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
+
         inline js_object_ptr<T> &operator=(double value);
 
         /**
@@ -624,8 +670,8 @@ namespace markusjx {
          * @param value the value to set
          * @return this
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::boolean)
+
         inline js_object_ptr<T> &operator=(bool value);
 
         /**
@@ -637,7 +683,7 @@ namespace markusjx {
          * @return this
          */
         template<class R, class...Args>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
+        VAR_REQUIRES(T, raw::js_object, raw::function)
         inline js_object_ptr<T> &operator=(const std::function<R(Args...)> &func);
 
         /**
@@ -648,7 +694,7 @@ namespace markusjx {
          * @return the result of the function call
          */
         template<class...Args>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
+        VAR_REQUIRES(T, raw::js_object, raw::function)
         inline js_object_ptr<raw::js_object> operator()(Args...args);
 
         /**
@@ -661,7 +707,7 @@ namespace markusjx {
          * @return this
          */
         template<class...Types>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+        VAR_REQUIRES(T, raw::js_object, raw::string)
         inline js_object_ptr<T> &append(Types...args);
 
 #ifdef NAPI_VERSION
@@ -683,8 +729,8 @@ namespace markusjx {
          * @param searchValue the value to search for
          * @return a reference to the object
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T> || std::is_same_v<raw::array, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES_THREE(T, raw::js_object, raw::object, raw::array)
+
         inline js_object_ptr<raw::js_object> &operator[](const js_object_ptr<raw::js_object> &searchValue);
 
         /**
@@ -694,7 +740,7 @@ namespace markusjx {
          * @return the result of the operation
          */
         template<class U>
-        [[nodiscard]] inline js_object_ptr<T> operator+(const js_object_ptr<U> &other) const;
+        VAR_NODISCARD inline js_object_ptr<T> operator+(const js_object_ptr<U> &other) const;
 
         /**
          * operator +
@@ -704,7 +750,7 @@ namespace markusjx {
          * @return the result of the operation
          */
         template<class U>
-        [[nodiscard]] inline js_object_ptr<T> operator+(const U &val) const;
+        VAR_NODISCARD inline js_object_ptr<T> operator+(const U &val) const;
 
         /**
          * operator +
@@ -712,7 +758,7 @@ namespace markusjx {
          * @param other the object to subtract
          * @return the result of the operation
          */
-        [[nodiscard]] inline js_object_ptr<T> operator-(const js_object_ptr<T> &other) const;
+        VAR_NODISCARD inline js_object_ptr<T> operator-(const js_object_ptr<T> &other) const;
 
         /**
          * operator -
@@ -722,8 +768,8 @@ namespace markusjx {
          * @return the result of the operation
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<T> operator-(const U &val) const;
+        VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<T> operator-(const U &val) const;
 
         /**
          * operator *
@@ -731,7 +777,7 @@ namespace markusjx {
          * @param other the object to multiply with
          * @return the result of the operation
          */
-        [[nodiscard]] inline js_object_ptr<T> operator*(const js_object_ptr<T> &other) const;
+        VAR_NODISCARD inline js_object_ptr<T> operator*(const js_object_ptr<T> &other) const;
 
         /**
          * operator *
@@ -741,8 +787,8 @@ namespace markusjx {
          * @return the result of the operation
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<T> operator*(const U &val) const;
+        VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<T> operator*(const U &val) const;
 
         /**
          * operator /
@@ -750,7 +796,7 @@ namespace markusjx {
          * @param other the object to add
          * @return the result of the operation
          */
-        [[nodiscard]] inline js_object_ptr<T> operator/(const js_object_ptr<T> &other) const;
+        VAR_NODISCARD inline js_object_ptr<T> operator/(const js_object_ptr<T> &other) const;
 
         /**
          * operator /
@@ -760,8 +806,8 @@ namespace markusjx {
          * @return the result of the operation
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<T> operator/(const U &val) const;
+        VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<T> operator/(const U &val) const;
 
         /**
          * Operator +=
@@ -808,8 +854,8 @@ namespace markusjx {
          *
          * @return this
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
+
         inline const js_object_ptr<T> operator++(int n);
 
         /**
@@ -817,8 +863,8 @@ namespace markusjx {
          *
          * @return this
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
+
         inline const js_object_ptr<T> operator--(int n);
 
         /**
@@ -829,8 +875,8 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<raw::boolean> operator<(const U &val) const;
+        VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<raw::boolean> operator<(const U &val) const;
 
         /**
          * Operator >
@@ -840,8 +886,8 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<raw::boolean> operator>(const U &val) const;
+        VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<raw::boolean> operator>(const U &val) const;
 
         /**
          * Operator <=
@@ -851,8 +897,8 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<raw::boolean> operator<=(const U &val) const;
+        VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<raw::boolean> operator<=(const U &val) const;
 
         /**
          * Operator >=
@@ -862,8 +908,8 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<raw::boolean> operator>=(const U &val) const;
+        VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<raw::boolean> operator>=(const U &val) const;
 
         /**
          * Operator <
@@ -873,8 +919,8 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<raw::boolean> operator<(const js_object_ptr<U> &val) const;
+        VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<raw::boolean> operator<(const js_object_ptr<U> &val) const;
 
         /**
          * Operator >
@@ -884,8 +930,8 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<raw::boolean> operator>(const js_object_ptr<U> &val) const;
+        VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<raw::boolean> operator>(const js_object_ptr<U> &val) const;
 
         /**
          * Operator <=
@@ -895,8 +941,8 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<raw::boolean> operator<=(const js_object_ptr<U> &val) const;
+        VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<raw::boolean> operator<=(const js_object_ptr<U> &val) const;
 
         /**
          * Operator >=
@@ -906,16 +952,16 @@ namespace markusjx {
          * @return the operation result
          */
         template<class U>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<raw::boolean> operator>=(const js_object_ptr<U> &val) const;
+        VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<raw::boolean> operator>=(const js_object_ptr<U> &val) const;
 
         /**
          * Get the begin iterator. Only available if T = raw::array or raw::object
          *
          * @return an iterator
          */
-        template<class = T>
-        requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::array, raw::object)
+
         inline auto begin() noexcept;
 
         /**
@@ -923,17 +969,16 @@ namespace markusjx {
          *
          * @return an iterator
          */
-        template<class = T>
-        requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
-        [[nodiscard]] inline auto begin() const noexcept;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::array, raw::object)
+        VAR_NODISCARD inline auto begin() const noexcept;
 
         /**
          * Get the end iterator. Only available if T = raw::array or raw::object
          *
          * @return an iterator
          */
-        template<class = T>
-        requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::array, raw::object)
+
         inline auto end() noexcept;
 
         /**
@@ -941,9 +986,8 @@ namespace markusjx {
          *
          * @return an iterator
          */
-        template<class = T>
-        requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
-        [[nodiscard]] inline auto end() const noexcept;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::array, raw::object)
+        VAR_NODISCARD inline auto end() const noexcept;
 
         /**
          * Get this pointer as another object
@@ -952,7 +996,7 @@ namespace markusjx {
          * @return the resulting pointer
          */
         template<class U>
-        [[nodiscard]] inline U *as() const;
+        VAR_NODISCARD inline U *as() const;
 
         /**
          * Convert to another js_object_ptr
@@ -961,14 +1005,14 @@ namespace markusjx {
          * @return the resulting pointer
          */
         template<class U>
-        [[nodiscard]] inline js_object_ptr<U> to() const;
+        VAR_NODISCARD inline js_object_ptr<U> to() const;
 
         /**
          * Convert this to js_object_ptr<raw::js_object>
          *
          * @return the resulting pointer
          */
-        [[nodiscard]] inline js_object_ptr<raw::js_object> asRawObject() const;
+        VAR_NODISCARD inline js_object_ptr<raw::js_object> asRawObject() const;
 
         // Convert to various types. Only available when T = raw::js_object
 
@@ -977,54 +1021,48 @@ namespace markusjx {
          *
          * @return the resulting pointer
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
-        [[nodiscard]] inline js_object_ptr<raw::string> asString() const;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::string)
+        VAR_NODISCARD inline js_object_ptr<raw::string> asString() const;
 
         /**
          * Convert this to js_object_ptr<raw::number>
          *
          * @return the resulting pointer
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-        [[nodiscard]] inline js_object_ptr<raw::number> asNumber() const;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
+        VAR_NODISCARD inline js_object_ptr<raw::number> asNumber() const;
 
         /**
          * Convert this to js_object_ptr<raw::boolean>
          *
          * @return the resulting pointer
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
-        [[nodiscard]] inline js_object_ptr<raw::boolean> asBoolean() const;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::boolean)
+        VAR_NODISCARD inline js_object_ptr<raw::boolean> asBoolean() const;
 
         /**
          * Convert this to js_object_ptr<raw::array>
          *
          * @return the resulting pointer
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::array, T>
-        [[nodiscard]] inline js_object_ptr<raw::array> asArray() const;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::array)
+        VAR_NODISCARD inline js_object_ptr<raw::array> asArray() const;
 
         /**
          * Convert this to js_object_ptr<raw::object>
          *
          * @return the resulting pointer
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T>
-        [[nodiscard]] inline js_object_ptr<raw::object> asObject() const;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::object)
+        VAR_NODISCARD inline js_object_ptr<raw::object> asObject() const;
 
         /**
          * Convert this to js_object_ptr<raw::function>
          *
          * @return the resulting pointer
          */
-        template<class = T>
-        requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
-        [[nodiscard]] inline js_object_ptr<raw::function> asFunction() const;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::function)
+        VAR_NODISCARD inline js_object_ptr<raw::function> asFunction() const;
 
         // Overloaded operators for std::string, bool and double
         // Only available for the specific classes storing these
@@ -1034,43 +1072,39 @@ namespace markusjx {
          *
          * @return the string value
          */
-        template<class = T>
-        requires std::is_same_v<raw::string, T> || std::is_same_v<raw::js_object, T>
-        [[nodiscard]] inline operator std::string() const;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::string, raw::js_object)
+        VAR_NODISCARD inline operator std::string() const;
 
         /**
          * operator bool
          *
          * @return the bool value
          */
-        template<class = T>
-        requires std::is_same_v<raw::boolean, T> || std::is_same_v<raw::js_object, T>
-        [[nodiscard]] inline operator bool() const;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::boolean, raw::js_object)
+        VAR_NODISCARD inline operator bool() const;
 
         /**
          * operator double
          *
          * @return the double value
          */
-        template<class = T>
-        requires std::is_same_v<raw::number, T> || std::is_same_v<raw::js_object, T>
-        [[nodiscard]] inline operator double() const;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::number, raw::js_object)
+        VAR_NODISCARD inline operator double() const;
 
         /**
          * operator int
          *
          * @return the int value
          */
-        template<class = T>
-        requires std::is_same_v<raw::number, T> || std::is_same_v<raw::js_object, T>
-        [[nodiscard]] inline operator int() const;
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::number, raw::js_object)
+        VAR_NODISCARD inline operator int() const;
 
         /**
          * Operator ->
          *
          * @return the pointer
          */
-        [[nodiscard]] inline T *operator->() const;
+        VAR_NODISCARD inline T *operator->() const;
 
         /**
          * The operator equals
@@ -1080,7 +1114,7 @@ namespace markusjx {
          * @return true, if both objects are equal
          */
         template<class U>
-        [[nodiscard]] inline bool operator==(const js_object_ptr<U> &other) const;
+        VAR_NODISCARD inline bool operator==(const js_object_ptr<U> &other) const;
 
         /**
          * The operator not equals
@@ -1090,7 +1124,7 @@ namespace markusjx {
          * @return true, if both objects are not equal
          */
         template<class U>
-        [[nodiscard]] inline bool operator!=(const js_object_ptr<U> &other) const;
+        VAR_NODISCARD inline bool operator!=(const js_object_ptr<U> &other) const;
 
         /**
          * Operator << overload for output streams
@@ -1109,21 +1143,21 @@ namespace markusjx {
          *
          * @return this as a string
          */
-        [[nodiscard]] inline std::string toString() const;
+        VAR_NODISCARD inline std::string toString() const;
 
         /**
          * Get the pointer as a hash
          *
          * @return the hash value
          */
-        [[nodiscard]] inline size_t hashValue() const;
+        VAR_NODISCARD inline size_t hashValue() const;
 
         /**
          * Get the underlying pointer
          *
          * @return the underlying pointer
          */
-        [[nodiscard]] inline T *get() const;
+        VAR_NODISCARD inline T *get() const;
 
         /**
          * Reset the pointer
@@ -1196,7 +1230,7 @@ namespace markusjx {
              * @param env the environment to work in
              * @return the value
              */
-            [[maybe_unused]] [[nodiscard]] inline Napi::Value getValue(const Napi::Env &env) const override {
+            VAR_UNUSED VAR_NODISCARD inline Napi::Value getValue(const Napi::Env &env) const override {
                 return env.Undefined();
             }
 
@@ -1208,7 +1242,7 @@ namespace markusjx {
              * @param obj the object to compare with
              * @return true if both are equal
              */
-            [[nodiscard]] inline bool operator==(const ::markusjx::js_object &obj) const override {
+            VAR_NODISCARD inline bool operator==(const ::markusjx::js_object &obj) const override {
                 return obj->getType() == this->getType();
             }
 
@@ -1217,7 +1251,7 @@ namespace markusjx {
              *
              * @return the type of this object
              */
-            [[nodiscard]] inline js_type getType() const override {
+            VAR_NODISCARD inline js_type getType() const override {
                 return js_type::undefined;
             }
 
@@ -1226,7 +1260,7 @@ namespace markusjx {
              *
              * @return this value as a string
              */
-            [[nodiscard]] inline std::string toString() const override {
+            VAR_NODISCARD inline std::string toString() const override {
                 return "undefined";
             }
 
@@ -1235,7 +1269,7 @@ namespace markusjx {
              *
              * @return the hash value
              */
-            [[nodiscard]] inline size_t hashValue() const override {
+            VAR_NODISCARD inline size_t hashValue() const override {
                 return 2;
             }
 
@@ -1275,7 +1309,7 @@ namespace markusjx {
              * @param obj the object to compare with
              * @return true if the other object is also null
              */
-            [[nodiscard]] inline bool operator==(const ::markusjx::js_object &obj) const override {
+            VAR_NODISCARD inline bool operator==(const ::markusjx::js_object &obj) const override {
                 return obj->getType() == this->getType();
             }
 
@@ -1284,7 +1318,7 @@ namespace markusjx {
              *
              * @return the type
              */
-            [[nodiscard]] inline js_type getType() const override {
+            VAR_NODISCARD inline js_type getType() const override {
                 return js_type::null;
             }
 
@@ -1293,7 +1327,7 @@ namespace markusjx {
              *
              * @return this value as a string
              */
-            [[nodiscard]] inline std::string toString() const override {
+            VAR_NODISCARD inline std::string toString() const override {
                 return "null";
             }
 
@@ -1302,7 +1336,7 @@ namespace markusjx {
              *
              * @return the hash value
              */
-            [[nodiscard]] inline size_t hashValue() const override {
+            VAR_NODISCARD inline size_t hashValue() const override {
                 return 1;
             }
 
@@ -1344,7 +1378,7 @@ namespace markusjx {
              *
              * @param val the bool value
              */
-            [[maybe_unused]] inline boolean(bool val) : value(val) {}
+            VAR_UNUSED inline boolean(bool val) : value(val) {}
 
 #ifdef NAPI_VERSION
 
@@ -1354,7 +1388,7 @@ namespace markusjx {
              * @param env the environment to worn in
              * @return the n-api boolean value
              */
-            [[maybe_unused]] [[nodiscard]] inline Napi::Value getValue(const Napi::Env &env) const override {
+            VAR_UNUSED VAR_NODISCARD inline Napi::Value getValue(const Napi::Env &env) const override {
                 return Napi::Boolean::New(env, value);
             }
 
@@ -1366,7 +1400,7 @@ namespace markusjx {
              * @param obj the object to compare with
              * @return true if the objects are equal
              */
-            [[nodiscard]] inline bool operator==(const ::markusjx::js_object &obj) const override {
+            VAR_NODISCARD inline bool operator==(const ::markusjx::js_object &obj) const override {
                 return obj->getType() == this->getType() && value == obj.as<boolean>()->operator bool();
             }
 
@@ -1375,7 +1409,7 @@ namespace markusjx {
              *
              * @return the type
              */
-            [[nodiscard]] inline js_type getType() const override {
+            VAR_NODISCARD inline js_type getType() const override {
                 return js_type::boolean;
             }
 
@@ -1384,7 +1418,7 @@ namespace markusjx {
              *
              * @return this value as a string
              */
-            [[nodiscard]] inline std::string toString() const override {
+            VAR_NODISCARD inline std::string toString() const override {
                 if (value) {
                     return "true";
                 } else {
@@ -1397,7 +1431,7 @@ namespace markusjx {
              *
              * @return the hash value
              */
-            [[nodiscard]] inline size_t hashValue() const override {
+            VAR_NODISCARD inline size_t hashValue() const override {
                 std::hash<bool> h;
                 return h(value);
             }
@@ -1419,7 +1453,7 @@ namespace markusjx {
              *
              * @return the bool value
              */
-            inline operator bool() const {
+            VAR_NODISCARD inline operator bool() const {
                 return value;
             }
 
@@ -1428,7 +1462,7 @@ namespace markusjx {
              *
              * @return the value
              */
-            [[nodiscard]] inline bool getValue() const {
+            VAR_NODISCARD inline bool getValue() const {
                 return value;
             }
 
@@ -1448,7 +1482,7 @@ namespace markusjx {
              *
              * @param number the number
              */
-            [[maybe_unused]] inline number(const Napi::Number &number) {
+            VAR_UNUSED inline number(const Napi::Number &number) {
                 value = number.DoubleValue();
             }
 
@@ -1457,7 +1491,7 @@ namespace markusjx {
              *
              * @param val the value
              */
-            [[maybe_unused]] inline number(const Napi::Value &val) {
+            VAR_UNUSED inline number(const Napi::Value &val) {
                 if (!val.IsNumber())
                     throw argumentMismatchException("class number requires a n-api value of type number");
                 value = val.ToNumber().DoubleValue();
@@ -1470,7 +1504,7 @@ namespace markusjx {
              *
              * @param val the value
              */
-            [[maybe_unused]] inline number(double val) {
+            VAR_UNUSED inline number(double val) {
                 value = val;
             }
 
@@ -1479,7 +1513,7 @@ namespace markusjx {
              *
              * @param val the value
              */
-            [[maybe_unused]] inline number(int val) {
+            VAR_UNUSED inline number(int val) {
                 value = val;
             }
 
@@ -1491,7 +1525,7 @@ namespace markusjx {
              * @param env the environment to work in
              * @return the n-api value
              */
-            [[maybe_unused]] [[nodiscard]] inline Napi::Value getValue(const Napi::Env &env) const override {
+            VAR_UNUSED [[VAR_NODISCARD]] inline Napi::Value getValue(const Napi::Env &env) const override {
                 return Napi::Number::New(env, value);
             }
 
@@ -1503,7 +1537,7 @@ namespace markusjx {
              * @param obj the object to compare with
              * @return true if the object is equal
              */
-            [[nodiscard]] inline bool operator==(const ::markusjx::js_object &obj) const override {
+            VAR_NODISCARD inline bool operator==(const ::markusjx::js_object &obj) const override {
                 return obj->getType() == this->getType() && value == obj.as<number>()->operator double();
             }
 
@@ -1512,7 +1546,7 @@ namespace markusjx {
              *
              * @return the type
              */
-            [[nodiscard]] inline js_type getType() const override {
+            VAR_NODISCARD inline js_type getType() const override {
                 return js_type::number;
             }
 
@@ -1521,10 +1555,12 @@ namespace markusjx {
              *
              * @return this value as a string
              */
-            [[nodiscard]] inline std::string toString() const override {
+            VAR_NODISCARD inline std::string toString() const override {
                 std::string str = std::to_string(value);
                 str.erase(str.find_last_not_of('0') + 1, std::string::npos);
+#ifdef VAR_HAS_CXX20
                 if (str.ends_with('.')) str.pop_back();
+#endif
                 return str;
             }
 
@@ -1533,7 +1569,7 @@ namespace markusjx {
              *
              * @return the hash value
              */
-            [[nodiscard]] inline size_t hashValue() const override {
+            VAR_NODISCARD inline size_t hashValue() const override {
                 std::hash<double> h;
                 return h(value);
             }
@@ -1552,7 +1588,7 @@ namespace markusjx {
              *
              * @return the value
              */
-            [[nodiscard]] [[maybe_unused]] inline double getValue() const {
+            VAR_NODISCARD VAR_UNUSED inline double getValue() const {
                 return value;
             }
 
@@ -1561,7 +1597,7 @@ namespace markusjx {
              *
              * @return the value
              */
-            [[nodiscard]] [[maybe_unused]] inline int intValue() const {
+            VAR_NODISCARD VAR_UNUSED inline int intValue() const {
                 return (int) value;
             }
 
@@ -1781,14 +1817,14 @@ namespace markusjx {
              *
              * @param str the n-api string value
              */
-            [[maybe_unused]] inline string(const Napi::String &str) : std::string(str.Utf8Value()) {}
+            VAR_UNUSED inline string(const Napi::String &str) : std::string(str.Utf8Value()) {}
 
             /**
              * Create a string from a n-api value
              *
              * @param value the value
              */
-            [[maybe_unused]] inline string(const Napi::Value &value) : std::string() {
+            VAR_UNUSED inline string(const Napi::Value &value) : std::string() {
                 if (!value.IsString())
                     throw argumentMismatchException("class string requires a n-api value of type string");
                 this->assign(value.As<Napi::String>().Utf8Value());
@@ -1803,7 +1839,7 @@ namespace markusjx {
              * @param replacement the replacement value
              * @return this
              */
-            [[maybe_unused]] inline string replace(const string &toReplace, const string &replacement) {
+            VAR_UNUSED inline string replace(const string &toReplace, const string &replacement) {
                 const std::regex re(toReplace);
                 this->assign(std::regex_replace(*this, re, replacement));
                 return *this;
@@ -1817,7 +1853,7 @@ namespace markusjx {
              * @return this
              */
             template<class...Args>
-            [[maybe_unused]] inline string concat(Args...args) {
+            VAR_UNUSED inline string concat(Args...args) {
                 std::vector<std::string> strings = convertArgsToVector<std::string>(args...);
                 for (const std::string &s : strings) {
                     this->append(s);
@@ -1826,15 +1862,18 @@ namespace markusjx {
                 return *this;
             }
 
+#ifdef VAR_HAS_CXX20
             /**
              * Check if this ends with a value
              *
              * @param s the value to check
              * @return true if this ends with the given value
              */
-            [[maybe_unused]] [[nodiscard]] inline bool endsWith(const string &s) const {
+            VAR_UNUSED VAR_NODISCARD inline bool endsWith(const string &s) const {
                 return this->ends_with(s);
             }
+
+#endif
 
             /**
              * Check if this includes a substring
@@ -1842,7 +1881,7 @@ namespace markusjx {
              * @param s the substring to check for
              * @return true if the substring exists
              */
-            [[maybe_unused]] [[nodiscard]] inline bool includes(const string &s) const {
+            VAR_UNUSED VAR_NODISCARD inline bool includes(const string &s) const {
                 return this->find(s) != std::string::npos;
             }
 
@@ -1852,7 +1891,7 @@ namespace markusjx {
              * @param s the string to search for
              * @return the index of the substring or -1 if not found
              */
-            [[maybe_unused]] [[nodiscard]] inline int indexOf(const string &s) const {
+            VAR_UNUSED VAR_NODISCARD inline int indexOf(const string &s) const {
                 return (int) this->find_first_of(s);
             }
 
@@ -1863,7 +1902,7 @@ namespace markusjx {
              * @param fromIndex the starting index
              * @return the index of the substring or -1 if not found
              */
-            [[maybe_unused]] [[nodiscard]] inline int indexOf(const string &s, int fromIndex) const {
+            VAR_UNUSED VAR_NODISCARD inline int indexOf(const string &s, int fromIndex) const {
                 return (int) this->find_first_of(s, fromIndex + s.length());
             }
 
@@ -1874,7 +1913,7 @@ namespace markusjx {
              * @param fromIndex the last index to search for
              * @return the index of the substring or -1 if not found
              */
-            [[maybe_unused]] [[nodiscard]] inline int
+            VAR_UNUSED VAR_NODISCARD inline int
             lastIndexOf(const string &s, size_t fromIndex = std::string::npos) const {
                 return (int) this->find_last_of(s, fromIndex);
             }
@@ -1897,7 +1936,7 @@ namespace markusjx {
              * @param pos the position of the char to get
              * @return the char as a string
              */
-            [[nodiscard]] inline markusjx::var operator[](int pos) const {
+            VAR_NODISCARD inline markusjx::var operator[](int pos) const {
                 if (pos >= this->size()) {
                     throw indexOutOfBoundsException("The requested index is out of bounds");
                 }
@@ -1913,7 +1952,7 @@ namespace markusjx {
              * @param regex the regex to check
              * @return all matches in this string
              */
-            [[maybe_unused]] inline std::vector<string> match(const string &regex) {
+            VAR_UNUSED VAR_NODISCARD inline std::vector<string> match(const string &regex) const {
                 const std::regex re(regex);
                 std::smatch match;
 
@@ -1937,7 +1976,7 @@ namespace markusjx {
              * @param env the environment to work in
              * @return the n-api string
              */
-            [[maybe_unused]] [[nodiscard]] inline Napi::String toNapiString(const Napi::Env &env) const {
+            VAR_UNUSED VAR_NODISCARD inline Napi::String toNapiString(const Napi::Env &env) const {
                 return Napi::String::New(env, *this);
             }
 
@@ -1947,7 +1986,7 @@ namespace markusjx {
              * @param env the environment to work in
              * @return the n-api value
              */
-            [[maybe_unused]] [[nodiscard]] inline Napi::Value getValue(const Napi::Env &env) const override {
+            VAR_UNUSED VAR_NODISCARD inline Napi::Value getValue(const Napi::Env &env) const override {
                 return Napi::String::New(env, *this);
             }
 
@@ -1959,7 +1998,7 @@ namespace markusjx {
              * @param obj the object to compare with
              * @return true if the two objects are equal
              */
-            [[nodiscard]] inline bool operator==(const ::markusjx::js_object &obj) const override {
+            VAR_NODISCARD inline bool operator==(const ::markusjx::js_object &obj) const override {
                 return obj->getType() == this->getType() && strcmp(this->c_str(), obj.as<string>()->c_str()) == 0;
             }
 
@@ -1968,7 +2007,7 @@ namespace markusjx {
              *
              * @return the type
              */
-            [[nodiscard]] inline js_type getType() const override {
+            VAR_NODISCARD inline js_type getType() const override {
                 return js_type::string;
             }
 
@@ -1977,7 +2016,7 @@ namespace markusjx {
              *
              * @return this value as a string
              */
-            [[nodiscard]] inline std::string toString() const override {
+            VAR_NODISCARD inline std::string toString() const override {
                 auto val = std::string(this->begin(), this->end());
                 return std::string(this->begin(), this->end());
             }
@@ -1987,7 +2026,7 @@ namespace markusjx {
              *
              * @return the hash value
              */
-            [[nodiscard]] inline size_t hashValue() const override {
+            VAR_NODISCARD inline size_t hashValue() const override {
                 std::hash<std::string> h;
                 return h(*this);
             }
@@ -2080,7 +2119,7 @@ namespace markusjx {
              *
              * @return the length
              */
-            [[nodiscard]] inline size_t length() const {
+            VAR_NODISCARD inline size_t length() const {
                 return values.size();
             }
 
@@ -2098,7 +2137,7 @@ namespace markusjx {
              *
              * @return an iterator
              */
-            inline auto begin() const noexcept {
+            VAR_NODISCARD inline auto begin() const noexcept {
                 return values.begin();
             }
 
@@ -2116,7 +2155,7 @@ namespace markusjx {
              *
              * @return an iterator
              */
-            inline auto end() const noexcept {
+            VAR_NODISCARD inline auto end() const noexcept {
                 return values.end();
             }
 
@@ -2125,7 +2164,7 @@ namespace markusjx {
              *
              * @return the vector
              */
-            [[nodiscard]] inline std::vector<::markusjx::js_object> getValues() const {
+            VAR_NODISCARD inline std::vector<::markusjx::js_object> getValues() const {
                 return values;
             }
 
@@ -2137,7 +2176,7 @@ namespace markusjx {
              * @param env the environment to work in
              * @return the value
              */
-            [[maybe_unused]] [[nodiscard]] inline Napi::Value getValue(const Napi::Env &env) const override {
+            VAR_UNUSED VAR_NODISCARD inline Napi::Value getValue(const Napi::Env &env) const override {
                 Napi::Array array = Napi::Array::New(env, values.size());
                 for (size_t i = 0; i < values.size(); i++) {
                     array.Set((uint32_t) i, values[i]->getValue(env));
@@ -2204,7 +2243,7 @@ namespace markusjx {
              * @param obj the object to compare with
              * @return true if the two objects are equal
              */
-            [[nodiscard]] inline bool operator==(const ::markusjx::js_object &obj) const override {
+            VAR_NODISCARD inline bool operator==(const ::markusjx::js_object &obj) const override {
                 if (obj->getType() == this->getType() && this->length() == obj.as<array>()->length()) {
                     for (int i = 0; i < this->length(); ++i) {
                         if (this->getValues()[i] != obj.as<array>()->operator[](i)) {
@@ -2223,7 +2262,7 @@ namespace markusjx {
              *
              * @return the type
              */
-            [[nodiscard]] inline js_type getType() const override {
+            VAR_NODISCARD inline js_type getType() const override {
                 return js_type::array;
             }
 
@@ -2232,7 +2271,7 @@ namespace markusjx {
              *
              * @return this value as a string
              */
-            [[nodiscard]] inline std::string toString() const override {
+            VAR_NODISCARD inline std::string toString() const override {
                 return "array";
             }
 
@@ -2242,7 +2281,7 @@ namespace markusjx {
              *
              * @return the hash value
              */
-            [[nodiscard]] inline size_t hashValue() const override {
+            VAR_NODISCARD inline size_t hashValue() const override {
                 size_t seed = values.size();
                 for (const ::markusjx::var &v : values) {
                     seed ^= v.hashValue() + 0x9e3779b9 + (seed << (unsigned) 6) + (seed >> (unsigned) 2);
@@ -2337,7 +2376,7 @@ namespace markusjx {
              *
              * @return the length
              */
-            [[nodiscard]] inline size_t length() const {
+            VAR_NODISCARD inline size_t length() const {
                 return contents.size();
             }
 
@@ -2346,7 +2385,7 @@ namespace markusjx {
              *
              * @return the content map
              */
-            [[nodiscard]] inline std::map<::markusjx::var, ::markusjx::var, cmpVarByHash> getContents() const {
+            VAR_NODISCARD inline std::map<::markusjx::var, ::markusjx::var, cmpVarByHash> getContents() const {
                 return contents;
             }
 
@@ -2364,7 +2403,7 @@ namespace markusjx {
              *
              * @return an iterator
              */
-            inline auto begin() const noexcept {
+            VAR_NODISCARD inline auto begin() const noexcept {
                 return contents.begin();
             }
 
@@ -2382,7 +2421,7 @@ namespace markusjx {
              *
              * @return an iterator
              */
-            inline auto end() const noexcept {
+            VAR_NODISCARD inline auto end() const noexcept {
                 return contents.end();
             }
 
@@ -2393,7 +2432,12 @@ namespace markusjx {
              * @return the object l-value
              */
             inline ::markusjx::var &operator[](const ::markusjx::var &key) {
-                if (contents.contains(key)) {
+#ifdef VAR_HAS_CXX20
+                bool contains_key = contents.contains(key);
+#else
+                bool contains_key = contents.find(key) != contents.end();
+#endif
+                if (contains_key) {
                     return contents.at(key);
                 } else {
                     return contents.insert_or_assign(key, ::markusjx::undefined_ptr()).first->second;
@@ -2408,7 +2452,7 @@ namespace markusjx {
              * @param env the environment to work with
              * @return the value
              */
-            [[maybe_unused]] [[nodiscard]] inline Napi::Value getValue(const Napi::Env &env) const override {
+            VAR_UNUSED VAR_NODISCARD inline Napi::Value getValue(const Napi::Env &env) const override {
                 Napi::Object object = Napi::Object::New(env);
                 for (const auto &p : contents) {
                     object.Set(p.first, p.second->getValue(env));
@@ -2424,7 +2468,7 @@ namespace markusjx {
              * @param obj the object to compare with
              * @return true if the two objects are equal
              */
-            [[nodiscard]] inline bool operator==(const ::markusjx::js_object &obj) const override {
+            VAR_NODISCARD inline bool operator==(const ::markusjx::js_object &obj) const override {
                 if (obj->getType() == this->getType() && this->length() == obj.as<object>()->length()) {
                     return std::equal(this->contents.begin(), this->contents.end(), obj.asObject()->contents.begin());
                 } else {
@@ -2437,7 +2481,7 @@ namespace markusjx {
              *
              * @return the type
              */
-            [[nodiscard]] inline js_type getType() const override {
+            VAR_NODISCARD inline js_type getType() const override {
                 return js_type::object;
             }
 
@@ -2446,7 +2490,7 @@ namespace markusjx {
              *
              * @return this value as a string
              */
-            [[nodiscard]] inline std::string toString() const override {
+            VAR_NODISCARD inline std::string toString() const override {
                 return "object";
             }
 
@@ -2456,7 +2500,7 @@ namespace markusjx {
              *
              * @return the hash value
              */
-            [[nodiscard]] inline size_t hashValue() const override {
+            VAR_NODISCARD inline size_t hashValue() const override {
                 size_t seed = contents.size();
                 for (const auto &p : contents) {
                     seed ^= p.first.hashValue() + 0x9e3779b9 + (seed << (unsigned) 6) + (seed >> (unsigned) 2);
@@ -2686,7 +2730,7 @@ namespace markusjx {
              *
              * @return the value
              */
-            [[maybe_unused]] [[nodiscard]] inline Napi::Value getValue(const Napi::Env &) const override {
+            VAR_UNUSED VAR_NODISCARD inline Napi::Value getValue(const Napi::Env &) const override {
                 return fn;
             }
 
@@ -2696,7 +2740,7 @@ namespace markusjx {
              * @param obj the object to compare with
              * @return true if the two objects are equal
              */
-            [[nodiscard]] inline bool operator==(const ::markusjx::js_object &obj) const override {
+            VAR_NODISCARD inline bool operator==(const ::markusjx::js_object &obj) const override {
                 return this->getType() == obj->getType() && this->fn == obj.as<function>()->fn;
             }
 #endif //NAPI_VERSION
@@ -2706,7 +2750,7 @@ namespace markusjx {
              *
              * @return the type
              */
-            [[nodiscard]] inline js_type getType() const override {
+            VAR_NODISCARD inline js_type getType() const override {
                 return js_type::function;
             }
 
@@ -2715,7 +2759,7 @@ namespace markusjx {
              *
              * @return this value as a string
              */
-            [[nodiscard]] inline std::string toString() const override {
+            VAR_NODISCARD inline std::string toString() const override {
                 return "function";
             }
 
@@ -2725,7 +2769,7 @@ namespace markusjx {
              *
              * @return the stored n-api function
              */
-            [[nodiscard]] inline operator Napi::Function() const {
+            VAR_NODISCARD inline operator Napi::Function() const {
                 return fn;
             }
 #endif //NAPI_VERSION
@@ -2790,8 +2834,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::null)
     inline js_object_ptr<T>::js_object_ptr(nullptr_t) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>,
                       "Null can only be constructed when T = raw::js_object or raw::null");
@@ -2817,7 +2860,7 @@ namespace markusjx {
 
     template<class T>
     template<class R, class...Args>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
+    VAR_REQUIRES(T, raw::js_object, raw::function)
     inline js_object_ptr<T>::js_object_ptr(const std::function<R(Args...)> &func) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>,
                       "Specialized constructors are not allowed when the type is raw::js_object");
@@ -2835,8 +2878,7 @@ namespace markusjx {
 
     // Specialized constructors. Only available when T = raw::js_object
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::string)
     inline js_object_ptr<T>::js_object_ptr(const char *c) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
@@ -2844,8 +2886,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::string)
     inline js_object_ptr<T>::js_object_ptr(const std::string &s) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
@@ -2853,8 +2894,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::boolean)
     inline js_object_ptr<T>::js_object_ptr(bool b) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
@@ -2862,8 +2902,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::number)
     inline js_object_ptr<T>::js_object_ptr(int i) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
@@ -2871,8 +2910,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::number)
     inline js_object_ptr<T>::js_object_ptr(double d) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
@@ -2881,7 +2919,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T>
+    VAR_REQUIRES_ONE(T, raw::js_object)
     inline js_object_ptr<T>::js_object_ptr(const js_object_ptr<U> &obj) {
         if constexpr (std::is_same_v<raw::js_object, U>) {
             // If U = raw::js_object, cast the data to T and then create new T from it
@@ -2921,7 +2959,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T>
+    VAR_REQUIRES_ONE(T, raw::js_object)
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(const js_object_ptr<U> &other) {
         static_assert(std::is_same_v<raw::js_object, T>,
                       "Operator= with type = U is only allowed when T = raw::js_object");
@@ -2949,8 +2987,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::null)
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(nullptr_t) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>,
                       "Object can only be set to null when T = raw::js_object or raw::null");
@@ -2961,8 +2998,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::string)
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(const char *value) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "this operator overload is only available when T = raw::js_object or T = raw::string");
@@ -2981,8 +3017,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::string)
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(const std::string &value) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "this operator overload is only available when T = raw::js_object or T = raw::string");
@@ -3001,8 +3036,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::number)
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(int value) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "this operator overload is only available when T = raw::js_object or T = raw::number");
@@ -3021,8 +3055,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::number)
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(double value) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "this operator overload is only available when T = raw::js_object or T = raw::number");
@@ -3041,8 +3074,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::boolean)
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(bool value) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>,
                       "this operator overload is only available when T = raw::js_object or T = raw::boolean");
@@ -3062,7 +3094,7 @@ namespace markusjx {
 
     template<class T>
     template<class R, class...Args>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
+    VAR_REQUIRES(T, raw::js_object, raw::function)
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(const std::function<R(Args...)> &func) {
         delete ptr;
         ptr = new raw::function(func);
@@ -3072,7 +3104,7 @@ namespace markusjx {
 
     template<class T>
     template<class...Args>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
+    VAR_REQUIRES(T, raw::js_object, raw::function)
     inline js_object_ptr<raw::js_object> js_object_ptr<T>::operator()(Args...args) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>,
                       "operator() is only available when T = raw::js_object and its type is function or T = raw::function");
@@ -3090,12 +3122,12 @@ namespace markusjx {
 
     template<class T>
     template<class...Types>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
+    VAR_REQUIRES(T, raw::js_object, raw::string)
     inline js_object_ptr<T> &js_object_ptr<T>::append(Types...args) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "append is only available when T = raw::js_object and its type is string or T = raw::string");
         std::string toAppend;
-        [[maybe_unused]] volatile auto x = {(toAppend.append(raw::varArgToString(args)), 0)...};
+        VAR_UNUSED volatile auto x = {(toAppend.append(raw::varArgToString(args)), 0)...};
 
         return this->operator+=(toAppend);
     }
@@ -3166,8 +3198,7 @@ namespace markusjx {
 #endif //NAPI_VERSION
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T> || std::is_same_v<raw::array, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES_THREE(T, raw::js_object, raw::object, raw::array)
     inline js_object_ptr<raw::js_object> &
     js_object_ptr<T>::operator[](const js_object_ptr<raw::js_object> &searchValue) {
         static_assert(
@@ -3191,7 +3222,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator+(const js_object_ptr<U> &other) const {
+    VAR_NODISCARD inline js_object_ptr<T> js_object_ptr<T>::operator+(const js_object_ptr<U> &other) const {
         if constexpr (std::is_same_v<raw::string, U> || std::is_same_v<raw::string, T>) {
             std::string s(ptr->toString());
             s.append(other->toString());
@@ -3208,7 +3239,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator+(const U &val) const {
+    VAR_NODISCARD inline js_object_ptr<T> js_object_ptr<T>::operator+(const U &val) const {
         if (ptr->getType() == raw::js_type::number) {
             // If U = std::string or U = const char *, create a string
             if constexpr (std::is_same_v<std::string, U> || std::is_same_v<const char *, U>) {
@@ -3255,14 +3286,14 @@ namespace markusjx {
     }
 
     template<class T>
-    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator-(const js_object_ptr<T> &other) const {
+    VAR_NODISCARD inline js_object_ptr<T> js_object_ptr<T>::operator-(const js_object_ptr<T> &other) const {
         return this->operator-(other.operator double());
     }
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator-(const U &val) const {
+    VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<T> js_object_ptr<T>::operator-(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator- is only available when T = raw::js_object and its type is number or T = raw::number");
         if constexpr (std::is_same_v<raw::number, T>) {
@@ -3287,15 +3318,15 @@ namespace markusjx {
     }
 
     template<class T>
-    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator*(const js_object_ptr<T> &other) const {
+    VAR_NODISCARD inline js_object_ptr<T> js_object_ptr<T>::operator*(const js_object_ptr<T> &other) const {
         std::cout << other->getTypeAsString() << std::endl;
         return this->operator*(other.operator double());
     }
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator*(const U &val) const {
+    VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<T> js_object_ptr<T>::operator*(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator* is only available when T = raw::js_object and its type is number or T = raw::number");
         if constexpr (std::is_same_v<raw::number, T>) {
@@ -3320,14 +3351,14 @@ namespace markusjx {
     }
 
     template<class T>
-    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator/(const js_object_ptr<T> &other) const {
+    VAR_NODISCARD inline js_object_ptr<T> js_object_ptr<T>::operator/(const js_object_ptr<T> &other) const {
         return this->operator/(other.operator double());
     }
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<T> js_object_ptr<T>::operator/(const U &val) const {
+    VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<T> js_object_ptr<T>::operator/(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator/ is only available when T = raw::js_object and its type is number or T = raw::number");
         if constexpr (std::is_same_v<raw::number, T>) {
@@ -3376,8 +3407,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::number)
     inline const js_object_ptr<T> js_object_ptr<T>::operator++(int n) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator++ is only available when T = number or T = js_object and its type is number");
@@ -3406,8 +3436,7 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::number)
     inline const js_object_ptr<T> js_object_ptr<T>::operator--(int n) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator-- is only available when T = number or T = js_object and its type is number");
@@ -3437,8 +3466,8 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<(const U &val) const {
+    VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator < is only available if T is one of raw::js_object, raw::number and their type is number");
         if constexpr (std::is_same_v<raw::number, T>) {
@@ -3455,8 +3484,8 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>(const U &val) const {
+    VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator > is only available if T is one of raw::js_object, raw::number and their type is number");
         if constexpr (std::is_same_v<raw::number, T>) {
@@ -3474,8 +3503,8 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<=(const U &val) const {
+    VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<=(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator <= is only available if T is one of raw::js_object, raw::number and their type is number");
         if constexpr (std::is_same_v<raw::number, T>) {
@@ -3492,8 +3521,8 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>=(const U &val) const {
+    VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>=(const U &val) const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "operator >= is only available if T is one of raw::js_object, raw::number and their type is number");
         if constexpr (std::is_same_v<raw::number, T>) {
@@ -3510,8 +3539,8 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<(const js_object_ptr<U> &val) const {
+    VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<(const js_object_ptr<U> &val) const {
         static_assert(std::is_same_v<raw::js_object, U> || std::is_same_v<raw::number, U>,
                       "operator < is only available if U is one of raw::js_object, raw::number and their type is number");
         if constexpr (std::is_same_v<raw::number, U>) {
@@ -3528,8 +3557,8 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>(const js_object_ptr<U> &val) const {
+    VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>(const js_object_ptr<U> &val) const {
         static_assert(std::is_same_v<raw::js_object, U> || std::is_same_v<raw::number, U>,
                       "operator > is only available if U is one of raw::js_object, raw::number and their type is number");
         if constexpr (std::is_same_v<raw::number, U>) {
@@ -3546,8 +3575,8 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<=(const js_object_ptr<U> &val) const {
+    VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator<=(const js_object_ptr<U> &val) const {
         static_assert(std::is_same_v<raw::js_object, U> || std::is_same_v<raw::number, U>,
                       "operator <= is only available if U is one of raw::js_object, raw::number and their type is number");
         if constexpr (std::is_same_v<raw::number, U>) {
@@ -3564,8 +3593,8 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>=(const js_object_ptr<U> &val) const {
+    VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<raw::boolean> js_object_ptr<T>::operator>=(const js_object_ptr<U> &val) const {
         static_assert(std::is_same_v<raw::js_object, U> || std::is_same_v<raw::number, U>,
                       "operator >= is only available if U is one of raw::js_object, raw::number and their type is number");
         if constexpr (std::is_same_v<raw::number, U>) {
@@ -3581,54 +3610,49 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::array, raw::object)
     inline auto js_object_ptr<T>::begin() noexcept {
         return ptr->begin();
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
-    [[nodiscard]] inline auto js_object_ptr<T>::begin() const noexcept {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::array, raw::object)
+    VAR_NODISCARD inline auto js_object_ptr<T>::begin() const noexcept {
         return ptr->begin();
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::array, raw::object)
     inline auto js_object_ptr<T>::end() noexcept {
         return ptr->end();
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::array, T> || std::is_same_v<raw::object, T>
-    [[nodiscard]] inline auto js_object_ptr<T>::end() const noexcept {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::array, raw::object)
+    VAR_NODISCARD inline auto js_object_ptr<T>::end() const noexcept {
         return ptr->end();
     }
 
     template<class T>
     template<class U>
-    [[nodiscard]] inline U *js_object_ptr<T>::as() const {
+    VAR_NODISCARD inline U *js_object_ptr<T>::as() const {
         return (U *) ptr;
     }
 
     template<class T>
     template<class U>
-    [[nodiscard]] inline js_object_ptr<U> js_object_ptr<T>::to() const {
+    VAR_NODISCARD inline js_object_ptr<U> js_object_ptr<T>::to() const {
         return js_object_ptr<U>(new U(*((U *) ptr)));
     }
 
     template<class T>
-    [[nodiscard]] inline js_object_ptr<raw::js_object> js_object_ptr<T>::asRawObject() const {
+    VAR_NODISCARD inline js_object_ptr<raw::js_object> js_object_ptr<T>::asRawObject() const {
         return to<raw::js_object>();
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>
-    [[nodiscard]] inline js_object_ptr<raw::string> js_object_ptr<T>::asString() const {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::string)
+    VAR_NODISCARD inline js_object_ptr<raw::string> js_object_ptr<T>::asString() const {
         // Throw compile-time error if asString is not called on a raw::js_object
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "asString can only be called on a raw object");
@@ -3638,9 +3662,8 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>
-    [[nodiscard]] inline js_object_ptr<raw::number> js_object_ptr<T>::asNumber() const {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::number)
+    VAR_NODISCARD inline js_object_ptr<raw::number> js_object_ptr<T>::asNumber() const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
                       "asNumber can only be called on a raw object");
         if (ptr->getType() != raw::js_type::number)
@@ -3649,9 +3672,8 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>
-    [[nodiscard]] inline js_object_ptr<raw::boolean> js_object_ptr<T>::asBoolean() const {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::boolean)
+    VAR_NODISCARD inline js_object_ptr<raw::boolean> js_object_ptr<T>::asBoolean() const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>,
                       "asBoolean can only be called on a raw object");
         if (ptr->getType() != raw::js_type::boolean)
@@ -3660,9 +3682,8 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::array, T>
-    [[nodiscard]] inline js_object_ptr<raw::array> js_object_ptr<T>::asArray() const {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::array)
+    VAR_NODISCARD inline js_object_ptr<raw::array> js_object_ptr<T>::asArray() const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::array, T>,
                       "asArray can only be called on a raw object");
         if (ptr->getType() != raw::js_type::array)
@@ -3671,9 +3692,8 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T>
-    [[nodiscard]] inline js_object_ptr<raw::object> js_object_ptr<T>::asObject() const {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::object)
+    VAR_NODISCARD inline js_object_ptr<raw::object> js_object_ptr<T>::asObject() const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::object, T>,
                       "asObject can only be called on a raw object");
         if (ptr->getType() != raw::js_type::object)
@@ -3682,9 +3702,8 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>
-    [[nodiscard]] inline js_object_ptr<raw::function> js_object_ptr<T>::asFunction() const {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::function)
+    VAR_NODISCARD inline js_object_ptr<raw::function> js_object_ptr<T>::asFunction() const {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>,
                       "asFunction can only be called on a raw object");
         if (ptr->getType() != raw::js_type::function)
@@ -3696,9 +3715,8 @@ namespace markusjx {
     // Only available for the specific classes storing these
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::string, T> || std::is_same_v<raw::js_object, T>
-    [[nodiscard]] inline js_object_ptr<T>::operator std::string() const {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::string, raw::js_object)
+    VAR_NODISCARD inline js_object_ptr<T>::operator std::string() const {
         static_assert(std::is_same_v<raw::string, T> || std::is_same_v<raw::js_object, T>,
                       "operator std::string can only be used with a string type");
         if constexpr (std::is_same_v<raw::string, T>) {
@@ -3713,9 +3731,8 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::boolean, T> || std::is_same_v<raw::js_object, T>
-    [[nodiscard]] inline js_object_ptr<T>::operator bool() const {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::boolean, raw::js_object)
+    VAR_NODISCARD inline js_object_ptr<T>::operator bool() const {
         static_assert(std::is_same_v<raw::boolean, T> || std::is_same_v<raw::js_object, T>,
                       "operator bool can only be used with a boolean type");
         if constexpr (std::is_same_v<raw::boolean, T>) {
@@ -3730,9 +3747,8 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::number, T> || std::is_same_v<raw::js_object, T>
-    [[nodiscard]] inline js_object_ptr<T>::operator double() const {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::number, raw::js_object)
+    VAR_NODISCARD inline js_object_ptr<T>::operator double() const {
         static_assert(std::is_same_v<raw::number, T> || std::is_same_v<raw::js_object, T>,
                       "operator double can only be used with a number type");
         if constexpr (std::is_same_v<raw::number, T>) {
@@ -3756,31 +3772,30 @@ namespace markusjx {
     }
 
     template<class T>
-    template<class>
-    requires std::is_same_v<raw::number, T> || std::is_same_v<raw::js_object, T>
-    [[nodiscard]] inline js_object_ptr<T>::operator int() const {
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::number, raw::js_object)
+    VAR_NODISCARD inline js_object_ptr<T>::operator int() const {
         return (int) this->operator double();
     }
 
     template<class T>
-    [[nodiscard]] inline T *js_object_ptr<T>::operator->() const {
+    VAR_NODISCARD inline T *js_object_ptr<T>::operator->() const {
         return ptr;
     }
 
     template<class T>
     template<class U>
-    [[nodiscard]] inline bool js_object_ptr<T>::operator==(const js_object_ptr<U> &other) const {
+    VAR_NODISCARD inline bool js_object_ptr<T>::operator==(const js_object_ptr<U> &other) const {
         return ptr->operator==(*other.ptr);
     }
 
     template<class T>
     template<class U>
-    [[nodiscard]] inline bool js_object_ptr<T>::operator!=(const js_object_ptr<U> &other) const {
+    VAR_NODISCARD inline bool js_object_ptr<T>::operator!=(const js_object_ptr<U> &other) const {
         return !this->operator==(other);
     }
 
     template<class T>
-    [[nodiscard]] inline std::string js_object_ptr<T>::toString() const {
+    VAR_NODISCARD inline std::string js_object_ptr<T>::toString() const {
         if (ptr) {
             return ptr->toString();
         } else {
@@ -3789,12 +3804,12 @@ namespace markusjx {
     }
 
     template<class T>
-    [[nodiscard]] inline size_t js_object_ptr<T>::hashValue() const {
+    VAR_NODISCARD inline size_t js_object_ptr<T>::hashValue() const {
         return ptr->hashValue();
     }
 
     template<class T>
-    [[nodiscard]] inline T *js_object_ptr<T>::get() const {
+    VAR_NODISCARD inline T *js_object_ptr<T>::get() const {
         return ptr;
     }
 
@@ -3849,5 +3864,15 @@ namespace markusjx {
      */
     const undefined_ptr undefined;
 }
+
+// Undef everything
+#undef VAR_NODISCARD
+#undef VAR_UNUSED
+#undef VAR_REQUIRES_ONE
+#undef VAR_REQUIRES
+#undef VAR_REQUIRES_THREE
+#undef VAR_TEMPLATE
+#undef VAR_HAS_CXX20
+#undef VAR_HAS_CXX17
 
 #endif //MARKUSJX_VAR_HPP
