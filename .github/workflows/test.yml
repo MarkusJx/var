@@ -17,7 +17,7 @@ jobs:
 
     steps:
     - name: Install gtest ubuntu
-      uses: MarkusJx/googletest-installer@v1.0
+      uses: MarkusJx/googletest-installer@v1.1
       if: matrix.os == 'ubuntu-latest'
     - name: install g++-10 and gcc-10 ubuntu
       run: sudo apt-get install g++-10 gcc-10 -y
@@ -26,11 +26,11 @@ jobs:
       if: matrix.os == 'macOs-latest'
       run: brew install gcc@10
     - name: Install gtest macOs
-      uses: MarkusJx/googletest-installer@v1.0
+      uses: MarkusJx/googletest-installer@v1.1
       if: matrix.os == 'macOs-latest'
-      env:
-        CC: /usr/local/bin/gcc-10
-        CXX: /usr/local/bin/g++-10
+      with:
+        CC_path: /usr/local/bin/gcc-10
+        CXX_path: /usr/local/bin/g++-10
     - uses: actions/checkout@v1
     - name: configure ubuntu
       run: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Werror" . -B build
