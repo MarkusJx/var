@@ -43,8 +43,14 @@
 #   endif
 
 #   if (defined(_MSVC_LANG) && _MSVC_LANG > 201402L) || __cplusplus > 201402L // C++17
-#       define VAR_NODISCARD [[nodiscard]]
-#       define VAR_UNUSED [[maybe_unused]]
+#       if defined(__APPLE__) && defined(__clang__)
+#           define VAR_NODISCARD __attribute__ ((warn_unused_result))
+#           define VAR_UNUSED __attribute__((unused))
+#           warning Compiling on apple with clang may lead to issues. Consider compiling using gcc
+#       else
+#           define VAR_NODISCARD [[nodiscard]]
+#           define VAR_UNUSED [[maybe_unused]]
+#       endif
 #       define VAR_HAS_CXX17
 #   endif
 
@@ -469,7 +475,7 @@ namespace markusjx {
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::null)
 
-        inline js_object_ptr(nullptr_t);
+        inline js_object_ptr(std::nullptr_t);
 
         /**
          * Create a js_object_ptr from an existing pointer
@@ -622,7 +628,7 @@ namespace markusjx {
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::null)
 
-        inline js_object_ptr<T> &operator=(nullptr_t);
+        inline js_object_ptr<T> &operator=(std::nullptr_t);
 
         /**
          * Set a value. Only available when T = raw::js_object or T = raw::string
@@ -2835,7 +2841,7 @@ namespace markusjx {
 
     template<class T>
     VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::null)
-    inline js_object_ptr<T>::js_object_ptr(nullptr_t) {
+    inline js_object_ptr<T>::js_object_ptr(std::nullptr_t) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>,
                       "Null can only be constructed when T = raw::js_object or raw::null");
         ptr = new raw::null();
@@ -2988,7 +2994,7 @@ namespace markusjx {
 
     template<class T>
     VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::null)
-    inline js_object_ptr<T> &js_object_ptr<T>::operator=(nullptr_t) {
+    inline js_object_ptr<T> &js_object_ptr<T>::operator=(std::nullptr_t) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::null, T>,
                       "Object can only be set to null when T = raw::js_object or raw::null");
         delete ptr;
