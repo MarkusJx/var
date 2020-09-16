@@ -36,6 +36,9 @@ jobs:
       if: matrix.os == 'macOs-latest'
       working-directory: test
       run: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Werror" . -B build
+      env:
+        CC: /usr/local/bin/gcc-10
+        CXX: /usr/local/bin/g++-10
     - name: build
       run: cmake --build .
       working-directory: test/build
