@@ -198,6 +198,8 @@ s += true;
 str.append("true");
 
 EXPECT_EQ(s.toString(), str);
+
+EXPECT_ANY_THROW(s());
 }
 
 int main(int argc, char **argv) {

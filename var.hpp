@@ -33,13 +33,24 @@
 #include <type_traits>
 #include <functional>
 
+/*
+ * Can use stack traces in exceptions
+ */
+#if defined(VAR_ENABLE_STACKTRACE) && !defined(MARKUSJX_STACKTRACE_HPP)
+#   include <stacktrace.hpp>
+#elif defined(MARKUSJX_STACKTRACE_HPP)
+    // When this is defined, stack traces will be available on exception thrown
+#   define VAR_ENABLE_STACKTRACE
+#endif //VAR_ENABLE_STACKTRACE
+
 #if defined(_MSVC_LANG) || defined(__cplusplus)
 #   if (defined(_MSVC_LANG) && _MSVC_LANG > 201703L) || __cplusplus > 201703L // C++20
 #       define VAR_TEMPLATE(cls) template<cls>
-#       define VAR_REQUIRES_ONE(type, t1) requires std::is_same_v<t1, type>
-#       define VAR_REQUIRES_THREE(type, t1, t2, t3) requires std::is_same_v<t1, type> || std::is_same_v<t2, type> || std::is_same_v<t3, type>
-#       define VAR_REQUIRES(type, t1, t2) requires std::is_same_v<t1, type> || std::is_same_v<t2, type>
+#       define VAR_REQUIRES(type, ...) requires ::markusjx::utils::is_any_of_v<type, __VA_ARGS__>
 #       define VAR_HAS_CXX20
+#   else
+#       define VAR_ENABLE_IF(type, ...) template<class U = type, typename = std::enable_if_t<::markusjx::utils::is_any_of_v<U, __VA_ARGS__>, int>>
+#       define VAR_ENABLE_IF_DEF() template<class, typename>
 #   endif
 
 #   if (defined(_MSVC_LANG) && _MSVC_LANG > 201402L) || __cplusplus > 201402L // C++17
@@ -51,13 +62,10 @@
 #           define VAR_NODISCARD [[nodiscard]]
 #           define VAR_UNUSED [[maybe_unused]]
 #       endif
-#       define VAR_HAS_CXX17
-#   endif
 
-#   if (defined(_MSVC_LANG) && _MSVC_LANG > 201103L) || __cplusplus > 201103L // C++14
-#       if !defined(VAR_HAS_CXX17) && !defined(VAR_HAS_CXX20)
-#           error Use of C++14 and lower is not (yet) supported. Please use C++17 or C++20 instead
-#       endif
+#       define VAR_HAS_CXX17
+#   else
+#       error Use of C++14 and lower is not (yet) supported. Please use C++17 or C++20 instead
 #   endif
 #endif
 
@@ -65,16 +73,16 @@
 #   define VAR_TEMPLATE(cls)
 #endif
 
-#ifndef VAR_REQUIRES_ONE
-#   define VAR_REQUIRES_ONE(type, t1)
+#ifndef VAR_ENABLE_IF
+#   define VAR_ENABLE_IF(type, ...)
+#endif
+
+#ifndef VAR_ENABLE_IF_DEF
+#   define VAR_ENABLE_IF_DEF()
 #endif
 
 #ifndef VAR_REQUIRES
-#   define VAR_REQUIRES(type, t1, t2)
-#endif
-
-#ifndef VAR_REQUIRES_THREE
-#   define VAR_REQUIRES_THREE(type, t1, t2, t3)
+#   define VAR_REQUIRES(type, ...)
 #endif
 
 #ifndef VAR_NODISCARD
@@ -101,7 +109,11 @@ namespace markusjx {
          *
          * @param msg the error message
          */
-        explicit exception(const char *msg) : std::exception(), msg(msg), type("exception") {}
+        explicit exception(const char *msg) : std::exception(), msg(msg), type("exception") {
+#ifdef MARKUSJX_STACKTRACE_HPP
+            trace = markusjx::stacktrace::stacktrace();
+#endif //Stacktrace
+        }
 
         /**
          * Get the error message
@@ -130,7 +142,11 @@ namespace markusjx {
          *
          * @param msg the error message
          */
-        explicit exception(const char *msg) : std::exception(msg), type("exception") {}
+        explicit exception(const char *msg) : std::exception(msg), type("exception") {
+#ifdef VAR_ENABLE_STACKTRACE
+            trace = markusjx::stacktrace::stacktrace();
+#endif //Stacktrace
+        }
 
     protected:
         /**
@@ -139,7 +155,11 @@ namespace markusjx {
          * @param msg the error message
          * @param type the exception type
          */
-        exception(const char *msg, const char *type) : std::exception(msg), type(type) {}
+        exception(const char *msg, const char *type) : std::exception(msg), type(type) {
+#ifdef VAR_ENABLE_STACKTRACE
+            trace = markusjx::stacktrace::stacktrace();
+#endif //Stacktrace
+        }
 
 #endif
     public:
@@ -152,8 +172,17 @@ namespace markusjx {
             return type;
         }
 
+#ifdef VAR_ENABLE_STACKTRACE
+        VAR_NODISCARD VAR_UNUSED const markusjx::stacktrace::stacktrace &getStackTrace() const noexcept {
+            return trace;
+        }
+#endif //Stacktrace
+
     private:
         const char *type;
+#ifdef VAR_ENABLE_STACKTRACE
+        markusjx::stacktrace::stacktrace trace;
+#endif //Stacktrace
     };
 
     /**
@@ -194,6 +223,11 @@ namespace markusjx {
          */
         explicit indexOutOfBoundsException(const char *msg) : exception(msg, "indexOutOfBoundsException") {}
     };
+
+    namespace utils {
+        template<class T, class... Types>
+        inline constexpr bool is_any_of_v = std::disjunction_v<std::is_same<T, Types>...>;
+    }
 
     /**
      * A js object pointer
@@ -536,6 +570,7 @@ namespace markusjx {
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::string)
 
+        VAR_ENABLE_IF(T, raw::js_object, raw::string)
         inline js_object_ptr(const std::string &s);
 
         /**
@@ -575,7 +610,7 @@ namespace markusjx {
          * @param obj the object to copy from
          */
         template<class U>
-        VAR_REQUIRES_ONE(T, raw::js_object)
+        VAR_REQUIRES(T, raw::js_object)
         inline js_object_ptr(const js_object_ptr<U> &obj);
 
         /**
@@ -608,7 +643,7 @@ namespace markusjx {
          * @return this
          */
         template<class U>
-        VAR_REQUIRES_ONE(T, raw::js_object)
+        VAR_REQUIRES(T, raw::js_object)
         inline js_object_ptr<T> &operator=(const js_object_ptr<U> &other);
 
         /**
@@ -728,6 +763,7 @@ namespace markusjx {
 
 #endif //NAPI_VERSION
 
+#ifdef VAR_HAS_CXX20
         /**
          * operator [] for objects. Only available when this->getType() = object. Will create a new pair if the key
          * does not exist
@@ -735,9 +771,32 @@ namespace markusjx {
          * @param searchValue the value to search for
          * @return a reference to the object
          */
-        VAR_TEMPLATE(class = T) VAR_REQUIRES_THREE(T, raw::js_object, raw::object, raw::array)
-
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::object, raw::array)
         inline js_object_ptr<raw::js_object> &operator[](const js_object_ptr<raw::js_object> &searchValue);
+#else
+
+        VAR_ENABLE_IF(T, raw::js_object, raw::object)
+        inline js_object_ptr<raw::js_object> &operator[](const char *searchValue);
+
+        VAR_ENABLE_IF(T, raw::js_object, raw::object)
+        inline js_object_ptr<raw::js_object> &operator[](const std::string &searchValue);
+
+        VAR_ENABLE_IF(T, raw::js_object, raw::object)
+        inline js_object_ptr<raw::js_object> &operator[](bool searchValue);
+
+        VAR_ENABLE_IF(T, raw::js_object, raw::object)
+        inline js_object_ptr<raw::js_object> &operator[](double searchValue);
+
+        VAR_ENABLE_IF(T, raw::js_object, raw::object)
+        inline js_object_ptr<raw::js_object> &operator[](const js_object_ptr<raw::object> &searchValue);
+
+        VAR_ENABLE_IF(T, raw::js_object, raw::object)
+        inline js_object_ptr<raw::js_object> &operator[](const js_object_ptr<raw::array> &searchValue);
+
+        VAR_ENABLE_IF(T, raw::js_object, raw::array, raw::object)
+        inline js_object_ptr<raw::js_object> &operator[](int searchValue);
+
+#endif // CXX20
 
         /**
          * operator +
@@ -976,6 +1035,7 @@ namespace markusjx {
          * @return an iterator
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::array, raw::object)
+
         VAR_NODISCARD inline auto begin() const noexcept;
 
         /**
@@ -993,6 +1053,7 @@ namespace markusjx {
          * @return an iterator
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::array, raw::object)
+
         VAR_NODISCARD inline auto end() const noexcept;
 
         /**
@@ -1028,6 +1089,7 @@ namespace markusjx {
          * @return the resulting pointer
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::string)
+
         VAR_NODISCARD inline js_object_ptr<raw::string> asString() const;
 
         /**
@@ -1036,6 +1098,7 @@ namespace markusjx {
          * @return the resulting pointer
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
+
         VAR_NODISCARD inline js_object_ptr<raw::number> asNumber() const;
 
         /**
@@ -1044,6 +1107,7 @@ namespace markusjx {
          * @return the resulting pointer
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::boolean)
+
         VAR_NODISCARD inline js_object_ptr<raw::boolean> asBoolean() const;
 
         /**
@@ -1052,6 +1116,7 @@ namespace markusjx {
          * @return the resulting pointer
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::array)
+
         VAR_NODISCARD inline js_object_ptr<raw::array> asArray() const;
 
         /**
@@ -1060,6 +1125,7 @@ namespace markusjx {
          * @return the resulting pointer
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::object)
+
         VAR_NODISCARD inline js_object_ptr<raw::object> asObject() const;
 
         /**
@@ -1068,6 +1134,7 @@ namespace markusjx {
          * @return the resulting pointer
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::function)
+
         VAR_NODISCARD inline js_object_ptr<raw::function> asFunction() const;
 
         // Overloaded operators for std::string, bool and double
@@ -1079,6 +1146,7 @@ namespace markusjx {
          * @return the string value
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::string, raw::js_object)
+
         VAR_NODISCARD inline operator std::string() const;
 
         /**
@@ -1087,6 +1155,7 @@ namespace markusjx {
          * @return the bool value
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::boolean, raw::js_object)
+
         VAR_NODISCARD inline operator bool() const;
 
         /**
@@ -1095,6 +1164,7 @@ namespace markusjx {
          * @return the double value
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::number, raw::js_object)
+
         VAR_NODISCARD inline operator double() const;
 
         /**
@@ -1103,6 +1173,7 @@ namespace markusjx {
          * @return the int value
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::number, raw::js_object)
+
         VAR_NODISCARD inline operator int() const;
 
         /**
@@ -1566,6 +1637,8 @@ namespace markusjx {
                 str.erase(str.find_last_not_of('0') + 1, std::string::npos);
 #ifdef VAR_HAS_CXX20
                 if (str.ends_with('.')) str.pop_back();
+#else
+                if (str.at(str.size() - 1) == '.') str.pop_back();
 #endif
                 return str;
             }
@@ -1943,7 +2016,7 @@ namespace markusjx {
              * @return the char as a string
              */
             VAR_NODISCARD inline markusjx::var operator[](int pos) const {
-                if (pos >= this->size()) {
+                if (pos >= (int) this->size()) {
                     throw indexOutOfBoundsException("The requested index is out of bounds");
                 }
 
@@ -1965,7 +2038,7 @@ namespace markusjx {
                 std::vector<string> result;
 
                 if (regex_search(*this, match, re)) {
-                    for (int i = 1; i < match.size(); i++) {
+                    for (size_t i = 1; i < match.size(); i++) {
                         auto s = match[i].str();
                         result.emplace_back(s.begin(), s.end());
                     }
@@ -2045,8 +2118,8 @@ namespace markusjx {
              * @return the string
              */
             template<class...Args>
-            inline static string fromCharCode(Args...args) {
-                std::vector<char> data = convertArgsToVector<char>();
+            VAR_UNUSED inline static string fromCharCode(Args...args) {
+                std::vector<char> data = convertArgsToVector<char>(args...);
                 return string(data.begin(), data.end());
             }
         };
@@ -2114,7 +2187,7 @@ namespace markusjx {
              * @return the value at this index
              */
             inline ::markusjx::var &operator[](int index) {
-                if (index >= values.size()) {
+                if (index >= (int) values.size()) {
                     values.resize(index + 1, ::markusjx::undefined_ptr());
                 }
                 return values[index];
@@ -2251,7 +2324,7 @@ namespace markusjx {
              */
             VAR_NODISCARD inline bool operator==(const ::markusjx::js_object &obj) const override {
                 if (obj->getType() == this->getType() && this->length() == obj.as<array>()->length()) {
-                    for (int i = 0; i < this->length(); ++i) {
+                    for (int i = 0; i < (int) this->length(); ++i) {
                         if (this->getValues()[i] != obj.as<array>()->operator[](i)) {
                             return false;
                         }
@@ -2855,9 +2928,7 @@ namespace markusjx {
     template<class T>
     template<class U>
     inline js_object_ptr<T>::js_object_ptr(U obj) {
-        if constexpr ((std::is_same_v<raw::js_object, T> || std::is_same_v<raw::function, T>) &&
-                      !(std::is_same_v<int, U> || std::is_same_v<double, U> || std::is_same_v<bool, U> ||
-                        std::is_same_v<const char *, U> || std::is_same_v<std::decay<std::string>, U>)) {
+        if constexpr (std::is_same_v<raw::js_object, T>) {
             ptr = new raw::function(std::function(obj));
         } else {
             ptr = new T(obj);
@@ -2892,7 +2963,9 @@ namespace markusjx {
     }
 
     template<class T>
+
     VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::string)
+    VAR_ENABLE_IF_DEF()
     inline js_object_ptr<T>::js_object_ptr(const std::string &s) {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::string, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
@@ -2925,7 +2998,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    VAR_REQUIRES_ONE(T, raw::js_object)
+    VAR_REQUIRES(T, raw::js_object)
     inline js_object_ptr<T>::js_object_ptr(const js_object_ptr<U> &obj) {
         if constexpr (std::is_same_v<raw::js_object, U>) {
             // If U = raw::js_object, cast the data to T and then create new T from it
@@ -2965,7 +3038,7 @@ namespace markusjx {
 
     template<class T>
     template<class U>
-    VAR_REQUIRES_ONE(T, raw::js_object)
+    VAR_REQUIRES(T, raw::js_object)
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(const js_object_ptr<U> &other) {
         static_assert(std::is_same_v<raw::js_object, T>,
                       "Operator= with type = U is only allowed when T = raw::js_object");
@@ -3203,8 +3276,9 @@ namespace markusjx {
 
 #endif //NAPI_VERSION
 
+#ifdef VAR_HAS_CXX20
     template<class T>
-    VAR_TEMPLATE(class) VAR_REQUIRES_THREE(T, raw::js_object, raw::object, raw::array)
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::object, raw::array)
     inline js_object_ptr<raw::js_object> &
     js_object_ptr<T>::operator[](const js_object_ptr<raw::js_object> &searchValue) {
         static_assert(
@@ -3225,6 +3299,90 @@ namespace markusjx {
             }
         }
     }
+#else
+
+    template<class T>
+    VAR_ENABLE_IF_DEF()
+    inline js_object_ptr<raw::js_object> &js_object_ptr<T>::operator[](const char *searchValue) {
+        if (ptr->isObject()) {
+            return ((raw::object *) ptr)->operator[](searchValue);
+        } else {
+            throw argumentMismatchException(
+                    "operator[] is only available when T = raw::object, raw::array or raw::js_object and its type is object or array");
+        }
+    }
+
+    template<class T>
+    VAR_ENABLE_IF_DEF()
+    inline js_object_ptr<raw::js_object> &js_object_ptr<T>::operator[](const std::string &searchValue) {
+        if (ptr->isObject()) {
+            return ((raw::object *) ptr)->operator[](searchValue);
+        } else {
+            throw argumentMismatchException(
+                    "operator[] is only available when T = raw::object, raw::array or raw::js_object and its type is object or array");
+        }
+    }
+
+    template<class T>
+    VAR_ENABLE_IF_DEF()
+    inline js_object_ptr<raw::js_object> &js_object_ptr<T>::operator[](bool searchValue) {
+        if (ptr->isObject()) {
+            return ((raw::object *) ptr)->operator[](searchValue);
+        } else {
+            throw argumentMismatchException(
+                    "operator[] is only available when T = raw::object, raw::array or raw::js_object and its type is object or array");
+        }
+    }
+
+    template<class T>
+    VAR_ENABLE_IF_DEF()
+    inline js_object_ptr<raw::js_object> &js_object_ptr<T>::operator[](double searchValue) {
+        if (ptr->isObject()) {
+            return ((raw::object *) ptr)->operator[](searchValue);
+        } else if (ptr->isArray()) {
+            return ((raw::array *) ptr)->operator[]((int) searchValue);
+        } else {
+            throw argumentMismatchException(
+                    "operator[] is only available when T = raw::object, raw::array or raw::js_object and its type is object or array");
+        }
+    }
+
+    template<class T>
+    VAR_ENABLE_IF_DEF()
+    inline js_object_ptr<raw::js_object> &js_object_ptr<T>::operator[](const js_object_ptr<raw::object> &searchValue) {
+        if (ptr->isObject()) {
+            return ((raw::object *) ptr)->operator[](searchValue);
+        } else {
+            throw argumentMismatchException(
+                    "operator[] is only available when T = raw::object, raw::array or raw::js_object and its type is object or array");
+        }
+    }
+
+    template<class T>
+    VAR_ENABLE_IF_DEF()
+    inline js_object_ptr<raw::js_object> &js_object_ptr<T>::operator[](const js_object_ptr<raw::array> &searchValue) {
+        if (ptr->isObject()) {
+            return ((raw::object *) ptr)->operator[](searchValue);
+        } else {
+            throw argumentMismatchException(
+                    "operator[] is only available when T = raw::object, raw::array or raw::js_object and its type is object or array");
+        }
+    }
+
+    template<class T>
+    VAR_ENABLE_IF_DEF()
+    inline js_object_ptr<raw::js_object> &js_object_ptr<T>::operator[](int searchValue) {
+        if (ptr->isObject()) {
+            return ((raw::object *) ptr)->operator[](searchValue);
+        } else if (ptr->isArray()) {
+            return ((raw::array *) ptr)->operator[](searchValue);
+        } else {
+            throw argumentMismatchException(
+                    "operator[] is only available when T = raw::object, raw::array or raw::js_object and its type is object or array");
+        }
+    }
+
+#endif
 
     template<class T>
     template<class U>
@@ -3874,10 +4032,9 @@ namespace markusjx {
 // Undef everything
 #undef VAR_NODISCARD
 #undef VAR_UNUSED
-#undef VAR_REQUIRES_ONE
 #undef VAR_REQUIRES
-#undef VAR_REQUIRES_THREE
 #undef VAR_TEMPLATE
+#undef VAR_ENABLE_IF
 #undef VAR_HAS_CXX20
 #undef VAR_HAS_CXX17
 
