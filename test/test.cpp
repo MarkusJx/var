@@ -33,7 +33,7 @@ private:
 };
 
 TEST_F(NumberTest, additionTest) {
-double n = getRandomInt();
+long double n = getRandomInt();
 markusjx::var number = std::to_string(n);
 EXPECT_EQ(number.operator long double(), n);
 
@@ -60,7 +60,7 @@ EXPECT_EQ(number.operator long double(), n);
 }
 
 TEST_F(NumberTest, subtractionTest) {
-double n = getRandomInt();
+long double n = getRandomInt();
 markusjx::var number = std::to_string(n);
 
 EXPECT_EQ(number.operator long double(), n);
@@ -88,7 +88,7 @@ EXPECT_EQ(number.operator long double(), n);
 }
 
 TEST_F(NumberTest, multiplicationTest) {
-double n = getRandomInt();
+long double n = getRandomInt();
 markusjx::var number = std::to_string(n);
 
 EXPECT_EQ(number.operator long double(), n);
@@ -112,7 +112,7 @@ EXPECT_EQ(number.operator long double(), n);
 }
 
 TEST_F(NumberTest, divisionTest) {
-double n = getRandomInt();
+long double n = getRandomInt();
 markusjx::var number = std::to_string(n);
 
 EXPECT_EQ(number.operator long double(), n);
