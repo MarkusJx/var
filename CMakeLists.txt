@@ -9,3 +9,7 @@ file(GLOB src
         )
 
 add_executable(${PROJECT_NAME} ${src})
+
+if (NOT WIN32)
+    TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE dl)
+endif ()

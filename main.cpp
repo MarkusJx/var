@@ -1,5 +1,6 @@
 #include <iostream>
 
+#define STACKTRACE_USE_ADDR2LINE
 #include "stacktrace.hpp"
 #include "var.hpp"
 

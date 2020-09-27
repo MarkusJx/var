@@ -39,7 +39,7 @@
 #if defined(VAR_ENABLE_STACKTRACE) && !defined(MARKUSJX_STACKTRACE_HPP)
 #   include <stacktrace.hpp>
 #elif defined(MARKUSJX_STACKTRACE_HPP)
-    // When this is defined, stack traces will be available on exception thrown
+// When this is defined, stack traces will be available on exception thrown
 #   define VAR_ENABLE_STACKTRACE
 #endif //VAR_ENABLE_STACKTRACE
 
@@ -47,6 +47,7 @@
 #   if (defined(_MSVC_LANG) && _MSVC_LANG > 201703L) || __cplusplus > 201703L // C++20
 #       define VAR_TEMPLATE(cls) template<cls>
 #       define VAR_REQUIRES(type, ...) requires ::markusjx::utils::is_any_of_v<type, __VA_ARGS__>
+#       define VAR_REQUIRES_NUMBER(type) requires ::markusjx::utils::is_number_v<type>
 #       define VAR_HAS_CXX20
 #   else
 #       define VAR_ENABLE_IF(type, ...) template<class U = type, typename = std::enable_if_t<::markusjx::utils::is_any_of_v<U, __VA_ARGS__>, int>>
@@ -173,9 +174,11 @@ namespace markusjx {
         }
 
 #ifdef VAR_ENABLE_STACKTRACE
+
         VAR_NODISCARD VAR_UNUSED const markusjx::stacktrace::stacktrace &getStackTrace() const noexcept {
             return trace;
         }
+
 #endif //Stacktrace
 
     private:
@@ -227,6 +230,9 @@ namespace markusjx {
     namespace utils {
         template<class T, class... Types>
         inline constexpr bool is_any_of_v = std::disjunction_v<std::is_same<T, Types>...>;
+
+        template<class T>
+        inline constexpr bool is_number_v = is_any_of_v<T, int, double, float, long long, long double, long, short>;
     }
 
     /**
@@ -520,7 +526,8 @@ namespace markusjx {
 
         /**
          * Create an object from a value.
-         * If T = raw::js_object, it will be assumed that U is a function or lambda
+         * If T = raw::js_object, it will be assumed that U is a function or lambda. Only applies if U is not a number.
+         * If U is a number, a number will created, if possible
          *
          * @tparam U the value type
          * @param obj the object
@@ -582,26 +589,6 @@ namespace markusjx {
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::boolean)
 
         inline js_object_ptr(bool b);
-
-        /**
-         * Create a js_object_ptr<raw::js_object> from a integer value.
-         * Will create a js_object_ptr<raw::number> and cast it to raw::js_object
-         *
-         * @param i the integer value
-         */
-        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
-
-        inline js_object_ptr(int i);
-
-        /**
-         * Create a js_object_ptr<raw::js_object> from a double value.
-         * Will create a js_object_ptr<raw::number> and cast it to raw::js_object
-         *
-         * @param d the double value
-         */
-        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
-
-        inline js_object_ptr(double d);
 
         /**
          * Copy constructor
@@ -686,26 +673,6 @@ namespace markusjx {
         inline js_object_ptr<T> &operator=(const std::string &value);
 
         /**
-         * Set a value. Only available when T = raw::js_object or T = raw::number
-         *
-         * @param value the value to set
-         * @return this
-         */
-        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
-
-        inline js_object_ptr<T> &operator=(int value);
-
-        /**
-         * Set a value. Only available when T = raw::js_object or T = raw::number
-         *
-         * @param value the value to set
-         * @return this
-         */
-        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::number)
-
-        inline js_object_ptr<T> &operator=(double value);
-
-        /**
          * Set a value. Only available when T = raw::js_object or T = raw::boolean
          *
          * @param value the value to set
@@ -773,6 +740,7 @@ namespace markusjx {
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::js_object, raw::object, raw::array)
         inline js_object_ptr<raw::js_object> &operator[](const js_object_ptr<raw::js_object> &searchValue);
+
 #else
 
         VAR_ENABLE_IF(T, raw::js_object, raw::object)
@@ -1164,8 +1132,7 @@ namespace markusjx {
          * @return the double value
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::number, raw::js_object)
-
-        VAR_NODISCARD inline operator double() const;
+        VAR_NODISCARD inline operator long double() const;
 
         /**
          * operator int
@@ -1173,8 +1140,15 @@ namespace markusjx {
          * @return the int value
          */
         VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::number, raw::js_object)
-
         VAR_NODISCARD inline operator int() const;
+
+        /**
+         * Get a long long value
+         *
+         * @return the long long value
+         */
+        VAR_TEMPLATE(class = T) VAR_REQUIRES(T, raw::number, raw::js_object)
+        VAR_NODISCARD inline long long int64Value() const;
 
         /**
          * Operator ->
@@ -1594,6 +1568,51 @@ namespace markusjx {
                 value = val;
             }
 
+            /**
+             * Create a number from a long double value
+             *
+             * @param val the value
+             */
+            inline number(long double val) {
+                value = val;
+            }
+
+            /**
+             * Create a number from a long long value
+             *
+             * @param val the value
+             */
+            inline number(long long val) {
+                value = (long double) val;
+            }
+
+            /**
+             * Create a number from a long value
+             *
+             * @param val the value
+             */
+            inline number(long val) {
+                value = val;
+            }
+
+            /**
+             * Create a number from a short value
+             *
+             * @param val the value
+             */
+            inline number(short val) {
+                value = val;
+            }
+
+            /**
+             * Create a number from a float value
+             *
+             * @param val the value
+             */
+            inline number(float val) {
+                value = val;
+            }
+
 #ifdef NAPI_VERSION
 
             /**
@@ -1615,7 +1634,7 @@ namespace markusjx {
              * @return true if the object is equal
              */
             VAR_NODISCARD inline bool operator==(const ::markusjx::js_object &obj) const override {
-                return obj->getType() == this->getType() && value == obj.as<number>()->operator double();
+                return obj->getType() == this->getType() && value == obj.as<number>()->operator long double();
             }
 
             /**
@@ -1658,7 +1677,7 @@ namespace markusjx {
              *
              * @return the double value
              */
-            inline operator double() const {
+            inline operator long double() const {
                 return value;
             }
 
@@ -1667,7 +1686,7 @@ namespace markusjx {
              *
              * @return the value
              */
-            VAR_NODISCARD VAR_UNUSED inline double getValue() const {
+            VAR_NODISCARD VAR_UNUSED inline long double getValue() const {
                 return value;
             }
 
@@ -1681,26 +1700,16 @@ namespace markusjx {
             }
 
             /**
-             * Set the value
+             * Create a number from a number type
              *
-             * @param val the new value
+             * @tparam T the number type
+             * @param val the value
              * @return this
              */
-            inline number &operator=(double val) {
-                value = val;
-
-                return *this;
-            }
-
-            /**
-             * Set the value
-             *
-             * @param val the new value
-             * @return this
-             */
-            inline number &operator=(int val) {
-                value = val;
-
+            template<class T> VAR_REQUIRES_NUMBER(T)
+            inline number &operator=(T val) {
+                static_assert(utils::is_number_v<T>, "operator= requires T to be a number type");
+                value = (long double) val;
                 return *this;
             }
 
@@ -1873,7 +1882,7 @@ namespace markusjx {
             }
 
         private:
-            double value;
+            long double value;
         };
 
         /**
@@ -2624,7 +2633,7 @@ namespace markusjx {
             template<>
             struct converter<double> {
                 static double convert(const ::markusjx::var &val) {
-                    return val.operator double();
+                    return val.operator long double();
                 }
             };
 
@@ -2634,7 +2643,7 @@ namespace markusjx {
             template<>
             struct converter<int> {
                 static int convert(const ::markusjx::var &val) {
-                    return (int) val.operator double();
+                    return (int) val.operator long double();
                 }
             };
 
@@ -2928,8 +2937,11 @@ namespace markusjx {
     template<class T>
     template<class U>
     inline js_object_ptr<T>::js_object_ptr(U obj) {
-        if constexpr (std::is_same_v<raw::js_object, T>) {
+        if constexpr (std::is_same_v<raw::js_object, T> && !utils::is_number_v<U>) {
             ptr = new raw::function(std::function(obj));
+        } else if constexpr ((std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>) &&
+                             utils::is_number_v<U>) {
+            ptr = (T *) new raw::number(obj);
         } else {
             ptr = new T(obj);
         }
@@ -2978,22 +2990,6 @@ namespace markusjx {
         static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::boolean, T>,
                       "Specialized constructors are not allowed when the type is not raw::js_object");
         ptr = (T *) new raw::boolean(b);
-    }
-
-    template<class T>
-    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::number)
-    inline js_object_ptr<T>::js_object_ptr(int i) {
-        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
-                      "Specialized constructors are not allowed when the type is not raw::js_object");
-        ptr = (T *) new raw::number(i);
-    }
-
-    template<class T>
-    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::number)
-    inline js_object_ptr<T>::js_object_ptr(double d) {
-        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
-                      "Specialized constructors are not allowed when the type is not raw::js_object");
-        ptr = (T *) new raw::number(d);
     }
 
     template<class T>
@@ -3055,9 +3051,22 @@ namespace markusjx {
     template<class T>
     template<class U>
     inline js_object_ptr<T> &js_object_ptr<T>::operator=(U value) {
-        if constexpr (std::is_same_v<raw::js_object, T>) {
+        if constexpr (std::is_same_v<raw::js_object, T> &&
+                      !utils::is_number_v<U>) {
             delete ptr;
             ptr = new raw::function(std::function(value));
+        } else if constexpr ((std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>) &&
+                             utils::is_number_v<U>) {
+            if constexpr (std::is_same_v<raw::js_object, T>) {
+                if (get()->getType() == raw::js_type::number) {
+                    ((raw::number *) ptr)->operator=(value);
+                } else {
+                    delete ptr;
+                    ptr = new raw::number(value);
+                }
+            } else {
+                ptr->operator=(value);
+            }
         } else {
             ptr->operator=(value);
         }
@@ -3106,44 +3115,6 @@ namespace markusjx {
             } else {
                 delete ptr;
                 ptr = new raw::string(value.begin(), value.end());
-            }
-        } else {
-            ptr->operator=(value);
-        }
-
-        return *this;
-    }
-
-    template<class T>
-    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::number)
-    inline js_object_ptr<T> &js_object_ptr<T>::operator=(int value) {
-        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
-                      "this operator overload is only available when T = raw::js_object or T = raw::number");
-        if constexpr (std::is_same_v<raw::js_object, T>) {
-            if (get()->getType() == raw::js_type::number) {
-                ((raw::number *) ptr)->operator=(value);
-            } else {
-                delete ptr;
-                ptr = new raw::number(value);
-            }
-        } else {
-            ptr->operator=(value);
-        }
-
-        return *this;
-    }
-
-    template<class T>
-    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::number)
-    inline js_object_ptr<T> &js_object_ptr<T>::operator=(double value) {
-        static_assert(std::is_same_v<raw::js_object, T> || std::is_same_v<raw::number, T>,
-                      "this operator overload is only available when T = raw::js_object or T = raw::number");
-        if constexpr (std::is_same_v<raw::js_object, T>) {
-            if (get()->getType() == raw::js_type::number) {
-                ((raw::number *) ptr)->operator=(value);
-            } else {
-                delete ptr;
-                ptr = new raw::number(value);
             }
         } else {
             ptr->operator=(value);
@@ -3277,6 +3248,7 @@ namespace markusjx {
 #endif //NAPI_VERSION
 
 #ifdef VAR_HAS_CXX20
+
     template<class T>
     VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::js_object, raw::object, raw::array)
     inline js_object_ptr<raw::js_object> &
@@ -3287,18 +3259,19 @@ namespace markusjx {
         if constexpr (std::is_same_v<raw::object, T>) {
             return ptr->operator[](searchValue);
         } else if constexpr (std::is_same_v<raw::array, T>) {
-            return ptr->operator[]((int) searchValue.operator double());
+            return ptr->operator[]((int) searchValue.operator long double());
         } else {
             if (ptr->isObject()) {
                 return ((raw::object *) ptr)->operator[](searchValue);
             } else if (ptr->isArray()) {
-                return ((raw::array *) ptr)->operator[]((int) searchValue.operator double());
+                return ((raw::array *) ptr)->operator[]((int) searchValue.operator long double());
             } else {
                 throw argumentMismatchException(
                         "operator[] is only available when T = raw::object, raw::array or raw::js_object and its type is object or array");
             }
         }
     }
+
 #else
 
     template<class T>
@@ -3394,7 +3367,7 @@ namespace markusjx {
             return s;
         } else {
             if (other->getType() == raw::js_type::number) {
-                return this->operator+(other.operator double());
+                return this->operator+(other.operator long double());
             } else {
                 return this->operator+(other.ptr->toString());
             }
@@ -3579,16 +3552,16 @@ namespace markusjx {
             return ptr->operator++(n);
         } else {
             if (ptr->isNumber()) {
-                return ((raw::number *) ptr)->operator++(n).operator double();
+                return ((raw::number *) ptr)->operator++(n).operator long double();
             } else if (ptr->isString()) {
                 char *p;
-                double d = std::strtod(this->operator std::string().c_str(), &p);
+                long double d = std::strtold(this->operator std::string().c_str(), &p);
                 if (*p) {
                     throw conversionException("Unable to convert string to double");
                 } else {
                     delete ptr;
                     ptr = new raw::number(d);
-                    return ((raw::number *) ptr)->operator++(n).operator double();
+                    return ((raw::number *) ptr)->operator++(n).operator long double();
                 }
             } else {
                 throw argumentMismatchException(
@@ -3608,16 +3581,16 @@ namespace markusjx {
             ptr->operator--(n);
         } else {
             if (ptr->isNumber()) {
-                ((raw::number *) ptr)->operator--(n).operator double();
+                ((raw::number *) ptr)->operator--(n).operator long double();
             } else if (ptr->isString()) {
                 char *p;
-                double d = std::strtod(this->operator std::string().c_str(), &p);
+                long double d = std::strtold(this->operator std::string().c_str(), &p);
                 if (*p) {
                     throw conversionException("Unable to convert string to double");
                 } else {
                     delete ptr;
                     ptr = new raw::number(d);
-                    return ((raw::number *) ptr)->operator--(n).operator double();
+                    return ((raw::number *) ptr)->operator--(n).operator long double();
                 }
             } else {
                 throw argumentMismatchException(
@@ -3912,18 +3885,18 @@ namespace markusjx {
 
     template<class T>
     VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::number, raw::js_object)
-    VAR_NODISCARD inline js_object_ptr<T>::operator double() const {
+    VAR_NODISCARD inline js_object_ptr<T>::operator long double() const {
         static_assert(std::is_same_v<raw::number, T> || std::is_same_v<raw::js_object, T>,
                       "operator double can only be used with a number type");
         if constexpr (std::is_same_v<raw::number, T>) {
-            return ptr->operator double();
+            return ptr->operator long double();
         } else {
             if (ptr->isNumber()) {
-                return ((raw::number *) ptr)->operator double();
+                return ((raw::number *) ptr)->operator long double();
             } else if (ptr->isString()) {
                 char *p;
                 std::string data = this->toString();
-                double d = std::strtod(data.c_str(), &p);
+                long double d = std::strtold(data.c_str(), &p);
                 if (*p) {
                     throw conversionException("Unable to convert string to double");
                 } else {
@@ -3938,7 +3911,13 @@ namespace markusjx {
     template<class T>
     VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::number, raw::js_object)
     VAR_NODISCARD inline js_object_ptr<T>::operator int() const {
-        return (int) this->operator double();
+        return (int) this->operator long double();
+    }
+
+    template<class T>
+    VAR_TEMPLATE(class) VAR_REQUIRES(T, raw::number, raw::js_object)
+    VAR_NODISCARD inline long long js_object_ptr<T>::int64Value() const {
+        return (long long) this->operator long double();
     }
 
     template<class T>

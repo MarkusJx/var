@@ -35,104 +35,104 @@ private:
 TEST_F(NumberTest, additionTest) {
 double n = getRandomInt();
 markusjx::var number = std::to_string(n);
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 number = n;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 n++;
 number++;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 int rnd = getRandomInt();
 n +=
 rnd;
 number +=
 rnd;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 double r = getRandomDouble();
 n +=
 r;
 number +=
 r;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 }
 
 TEST_F(NumberTest, subtractionTest) {
 double n = getRandomInt();
 markusjx::var number = std::to_string(n);
 
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 number = n;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 n--;
 number--;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 int rnd = getRandomInt();
 n -=
 rnd;
 number -=
 rnd;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 double r = getRandomDouble();
 n -=
 r;
 number -=
 r;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 }
 
 TEST_F(NumberTest, multiplicationTest) {
 double n = getRandomInt();
 markusjx::var number = std::to_string(n);
 
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 number = n;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 int rnd = getRandomInt();
 n *=
 rnd;
 number *=
 rnd;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 double r = getRandomDouble();
 n *=
 r;
 number *=
 r;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 }
 
 TEST_F(NumberTest, divisionTest) {
 double n = getRandomInt();
 markusjx::var number = std::to_string(n);
 
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 number = n;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 int rnd = getRandomInt();
 n /=
 rnd;
 number /=
 rnd;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 
 double r = getRandomDouble();
 n /=
 r;
 number /=
 r;
-EXPECT_EQ(number.operator double(), n);
+EXPECT_EQ(number.operator long double(), n);
 }
 
 class StringTest : public ::testing::Test {
@@ -198,8 +198,13 @@ s += true;
 str.append("true");
 
 EXPECT_EQ(s.toString(), str);
+}
 
-EXPECT_ANY_THROW(s());
+TEST(ExcpetionTest, ThrowTest) {
+    markusjx::var s = "a";
+    EXPECT_ANY_THROW(s());
+
+    EXPECT_ANY_THROW(s[0]);
 }
 
 int main(int argc, char **argv) {
