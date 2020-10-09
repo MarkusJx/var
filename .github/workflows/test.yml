@@ -13,12 +13,12 @@ jobs:
 
     strategy:
       matrix:
-        os: [macOS-latest, ubuntu-latest]
+        os: [macOS-latest, ubuntu-latest, windows-latest]
 
     steps:
-    - name: Install gtest ubuntu
+    - name: Install gtest ubuntu & windows
       uses: MarkusJx/googletest-installer@v1.1
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
     - name: install g++-10 and gcc-10 ubuntu
       run: sudo apt-get install g++-10 gcc-10 -y
       if: matrix.os == 'ubuntu-latest'
@@ -46,9 +46,24 @@ jobs:
       env:
         CC: /usr/local/bin/gcc-10
         CXX: /usr/local/bin/g++-10
-    - name: build
+    - name: configure windows
+      if: matrix.os == 'windows-latest'
+      run: cmake . -B build
+      working-directory: test
+    - name: build unix
       run: cmake --build .
       working-directory: test/build
-    - name: run test
+      if: matrix.os != 'windows-latest'
+    - name: build windows
+      if: matrix.os == 'windows-latest'
+      run: cmake --build . --config Release
+      working-directory: test/build
+    - name: run test unix
       run: ./test
       working-directory: test/build
+      if: matrix.os != 'windows-latest'
+    - name: run test windows
+      run: test.exe
+      working-directory: test/build/Release
+      if: matrix.os == 'windows-latest'
+      shell: cmd
